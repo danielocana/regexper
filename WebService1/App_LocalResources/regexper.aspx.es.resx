@@ -136,4 +136,13 @@
   <data name="regex" xml:space="preserve">
     <value>Expresión Regular</value>
   </data>
+  <data name="creado" xml:space="preserve">
+    <value>Desarrollado por Daniel Ocaña.</value>
+  </data>
+  <data name="final" xml:space="preserve">
+    <value>Trabajo de Fin de Grado ULPGC.</value>
+  </data>
+  <data name="tutor" xml:space="preserve">
+    <value>Tutor Zenón Hernández.</value>
+  </data>
 </root>

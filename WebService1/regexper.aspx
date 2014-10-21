@@ -17,7 +17,7 @@
 <body>
     <header>
         <div id="cabeza">
-            <img src="images/ulpgc.png" alt="logo_ulpgc" height="100" width="360"/>
+            <img src="images/ulpgc.png" alt="logo_ulpgc" height="90" width="360"/>
             <h1 id="header"><asp:Literal ID="Literal1" runat="server" Text="<%$ Resources : PageResource1.Title%>" /></h1>
         </div>
     </header>
@@ -45,5 +45,12 @@
          <div id="result">             
         </div>
     </section>
+    <footer>
+      <ul id="list">
+          <li><asp:Literal runat="server" Text="<%$ Resources : creado %>" /></li>
+          <li><asp:Literal runat="server" Text="<%$ Resources : tutor %>" /></li>
+          <li><asp:Literal runat="server" Text="<%$ Resources : final %>" /></li>
+     </ul>
+    </footer>
 </body>
 </html>

@@ -147,7 +147,9 @@ function largo()
     return 24;
 }
 
-//funcion addInput que genera un input nuevo en caso de que no haya error en la expresion para hacer los macth
+/*funcion addInput que genera un input nuevo en caso de que no haya error en la expresion para hacer los macth
+y ademas en caso de que la expresion contenga \ las dobla y las muestra.
+*/
 function addInput()
 {
     if (wrong) {
@@ -164,6 +166,7 @@ function addInput()
         else
         {
             $("#Match").append("<input type='text' id='secondInput' placeholder='" + comprobar("match") + "' name='name'><input id='Button2' type='button' value='" + comprobar("match") + "'/><br/>");
+            doble_barra($('#txtData').val());
         }
     }
     wrong = false;
@@ -649,8 +652,7 @@ function para_match(response)
         $("#expresion").append(saltoLinea + saltoLinea);   
     }
     else {
-        $('#expresion').append('<div id="close">&nbsp;&nbsp;X</div>');
-        doble_barra($('#txtData').val());
+        $('#expresion').append('<div id="close">&nbsp;&nbsp;X</div>');        
         var tabla;
         $("#expresion").append(saltoLinea);
         crear_Tabla();

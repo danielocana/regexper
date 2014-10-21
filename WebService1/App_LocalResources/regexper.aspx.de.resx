@@ -119,7 +119,6 @@
   </resheader>
   <data name="grupo" xml:space="preserve">
     <value>Grupo</value>
-    <comment>Esta varibale es la que indica en el dibujo los grupos formados por parentesis.</comment>
   </data>
   <data name="PageResource1.Title" xml:space="preserve">
     <value>Web Regular Expresion Monitor</value>
@@ -135,5 +134,14 @@
   </data>
   <data name="regex" xml:space="preserve">
     <value>Regular Expression</value>
+  </data>
+  <data name="creado" xml:space="preserve">
+    <value>Präsentiert von Daniel Ocaña.</value>
+  </data>
+  <data name="final" xml:space="preserve">
+    <value>Work Final Degree ULPGC.</value>
+  </data>
+  <data name="tutor" xml:space="preserve">
+    <value>Tutor Zenón Hernández.</value>
   </data>
 </root>

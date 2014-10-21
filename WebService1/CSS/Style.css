@@ -1,8 +1,9 @@
 ﻿body {
-    background: white;
+    background-image: url('/images/fondo.png');
 }
 header {
-    background: none repeat scroll 0 0 #FEFEFE;
+    background: none repeat scroll 0 0;
+    background-image: url('/images/fondo.png');
     box-shadow: 0 0 15px;
     margin-left: -7px;
     margin-right: -8px;
@@ -115,4 +116,17 @@ svg {
 }
 #Match {
     margin-top: 12px;
+}
+#list {
+    list-style-type: none;
+    font-size: 12px;
+}
+footer {
+    font-size: 12px;
+    margin-left: -32px;
+}
+#list li {
+    border-right: 1px solid #000;
+    display: inline-block;
+    padding: 0 5px;
 }
