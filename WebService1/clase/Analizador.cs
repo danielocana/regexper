@@ -66,61 +66,92 @@ namespace RegexAnalizer
 
         public string Tratar_repeticiones(string repeticiones)
         {
-            char[] MyChar = { '{', '}' };
-            string nueva_repeticion = repeticiones.TrimEnd(MyChar);
-            nueva_repeticion = nueva_repeticion.TrimStart(MyChar);
-            if (nueva_repeticion == "+" || nueva_repeticion == "*" || nueva_repeticion == "?")
+            if (repeticiones == null)
             {
+                return "";
+            }
+            else 
+            {
+                char[] MyChar = { '{', '}' };
+                string nueva_repeticion = repeticiones.TrimEnd(MyChar);
+                nueva_repeticion = nueva_repeticion.TrimStart(MyChar);
+                if (nueva_repeticion == "+" || nueva_repeticion == "*" || nueva_repeticion == "?")
+                {
+                    return nueva_repeticion;
+                }
+                else
+                {
+                    if (Regex.IsMatch(nueva_repeticion, @"^\d+$"))
+                    {
+                        if (quitar_cero(nueva_repeticion) == "1")
+                        {
+                            return nueva_repeticion = "";
+                        }
+                        else { return nueva_repeticion = "b" + quitar_cero(nueva_repeticion); }
+                    }
+                    if (Regex.IsMatch(nueva_repeticion, @"^\d+,\d+$"))
+                    {
+                        int[] comparar = rep_digitos(repeticiones);
+                        if (comparar[0] <= comparar[1])
+                        {
+                            if (Regex.IsMatch(comparar[0].ToString(), @"^0+$"))
+                            /*este caso es a{0,4}, lo que hago es darle una marca al inicio de las repeticiones y asi se cuando en javascript pintarlo de una forma u otra*/
+                            {
+                                nueva_repeticion = "o" + "< " + comparar[1];
+                            }
+                            else { nueva_repeticion = "b" + comparar[0] + ".." + comparar[1]; }
+                        }
+                        else { nueva_repeticion = "m" + comparar[0] + ".." + comparar[1]; }
+                    }
+                    if (Regex.IsMatch(nueva_repeticion, @"\d+,"))
+                    {
+                        if (Regex.IsMatch(nueva_repeticion, @"^0+,$"))
+                        {
+                            return nueva_repeticion = "*";
+                        }
+                        else
+                        {
+                            nueva_repeticion = nueva_repeticion.Replace(",", "+");
+                            return nueva_repeticion = "b" + quitar_cero(nueva_repeticion);
+                        }
+                    }
+                }
                 return nueva_repeticion;
             }
-            else
-            {
-                if (Regex.IsMatch(nueva_repeticion, @"^\d+$"))
-                {
-                    if (quitar_cero(nueva_repeticion) == "1")
-                    {
-                        return nueva_repeticion = "";
-                    }
-                    else { return nueva_repeticion = "b" + quitar_cero(nueva_repeticion); }
-                }
-                if (Regex.IsMatch(nueva_repeticion, @"^\d+,\d+$"))
-                {
-                    int [] comparar = rep_digitos(repeticiones);
-                    if (comparar[0] <= comparar[1])
-                    {
-                        if (Regex.IsMatch(comparar[0].ToString(), @"^0+$")) 
-/*este caso es a{0,4}, lo que hago es darle una marca al inicio de las repeticiones y asi se cuando en javascript pintarlo de una forma u otra*/
-                        {
-                            nueva_repeticion = "o" + "< " + comparar[1];                          
-                        }
-                        else { nueva_repeticion = "b" + comparar[0] + ".." + comparar[1]; }                        
-                    }
-                    else { nueva_repeticion = "m" + comparar[0] + ".." + comparar[1]; }                    
-                }
-                if(Regex.IsMatch(nueva_repeticion, @"\d+,"))
-                {
-                    if (Regex.IsMatch(nueva_repeticion, @"^0+,$"))
-                    {
-                        return nueva_repeticion = "*";
-                    }
-                    else
-                    {
-                        nueva_repeticion = nueva_repeticion.Replace(",", "+");
-                        return nueva_repeticion = "b" + quitar_cero(nueva_repeticion);
-                    }
-                }
-            }
-            return nueva_repeticion;
         }
 
 //Este metodo se llamara antes de insertar en el result dado que si las repeticiones son pe: a{0} || a{0,0} no poner ese elemento en el result
         public void insertar(RegExItem result, RegExItem actual, string repeticiones)
         {
-            if (!(Regex.IsMatch(repeticiones, @"^{0+}$")) && !(Regex.IsMatch(repeticiones, @"^{0+,0+}$")))
+            if ((repeticiones== null) || (!(Regex.IsMatch(repeticiones, @"^{0+}$")) && !(Regex.IsMatch(repeticiones, @"^{0+,0+}$"))))
             {
                 actual.Repeticiones = Tratar_repeticiones(repeticiones);
                 result.Componentes.Add(actual); 
             }
+        }
+
+        //Este metodo se encargara en caso de encontrar los simbolos ?! en el principio de los parentesis.
+        public RegExItem busqueda_negativa(string variable)
+        {
+            RegExItem eltosParentesisInter;
+            string inicio = "";
+            if (variable.Length > 3)
+            {
+                inicio = variable.Substring(1, 2);
+            }
+            if (inicio == "?!")
+            {
+                eltosParentesisInter = analize(variable.Substring(3, (variable.Length - 4)), false);
+                eltosParentesisInter.Tipo = 2;
+                eltosParentesisInter.Subtipo = 1; //Para este caso es negativo
+            }
+            else
+            {
+                //Para este caso el proceso es normal
+                eltosParentesisInter = analize(variable.Substring(1, (variable.Length - 2)), false);
+                eltosParentesisInter.Tipo = 2; 
+            }
+            return eltosParentesisInter;
         }
 
         public RegExItem analize(string input, bool inDeep)
@@ -154,12 +185,26 @@ namespace RegexAnalizer
                 {
                     /*Los subtipos 15 seran los caracertes que por si solo representan algo*/
                     if (CurrentMatch.Groups[1].Value[0] == '^')
-                    {
+                    {                        
                         RegExItem startL = new RegExItem();
                         startL.Valor = "Inicio de Linea";
                         startL.Tipo = 1;
                         startL.Subtipo = 15;
-                        result.Componentes.Add(startL);
+                        if (result.Componentes.Count != 0)
+                        {
+                            RegExItem ultimoEltodeArrayTipo = (RegExItem)result.Componentes[result.Componentes.Count - 1];
+                            if (ultimoEltodeArrayTipo.Tipo == 3)
+                            {
+                                insertar((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1], startL, CurrentMatch.Groups[3].Value);
+                            }
+                            else 
+                            {
+                                startL.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
+                                result.Componentes.Add(startL); } 
+                        }
+                        else {
+                            startL.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
+                            result.Componentes.Add(startL); }                        
                     }
                     if (CurrentMatch.Groups[1].Value[0] == '$')
                     {
@@ -167,7 +212,20 @@ namespace RegexAnalizer
                         endL.Valor = "Final de linea";
                         endL.Tipo = 1;
                         endL.Subtipo = 15;
-                        result.Componentes.Add(endL);
+                        if (result.Componentes.Count != 0)
+                        {
+                            RegExItem ultimoEltodeArrayTipo = (RegExItem)result.Componentes[result.Componentes.Count - 1];
+                            if (ultimoEltodeArrayTipo.Tipo == 3)
+                            {
+                                insertar((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1], endL, CurrentMatch.Groups[3].Value);
+                            }
+                            else {
+                                endL.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
+                                result.Componentes.Add(endL); } 
+                        }
+                        else {
+                            endL.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
+                            result.Componentes.Add(endL); } 
                     }
                     if (CurrentMatch.Groups[1].Value[0] == '.')
                     {
@@ -175,7 +233,22 @@ namespace RegexAnalizer
                         anyL.Valor = "Cualquier carácter";
                         anyL.Tipo = 1;
                         anyL.Subtipo = 15;
-                        insertar(result, anyL, CurrentMatch.Groups[3].Value);
+                        if (result.Componentes.Count != 0)
+                        {
+                            RegExItem ultimoEltodeArrayTipo = (RegExItem)result.Componentes[result.Componentes.Count - 1];
+                            if (ultimoEltodeArrayTipo.Tipo == 3)
+                            {
+                                insertar((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1], anyL, CurrentMatch.Groups[3].Value);
+                            }
+                            else
+                            {
+                                anyL.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
+                                result.Componentes.Add(anyL);
+                            }
+                        }                        
+                        else {
+                            anyL.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
+                            result.Componentes.Add(anyL); }
                     }
                     if (CurrentMatch.Groups[1].Value[0] != '.' && CurrentMatch.Groups[1].Value[0] != '$' && CurrentMatch.Groups[1].Value[0] != '^' && CurrentMatch.Groups[1].Value[0] != '|' && CurrentMatch.Groups[1].Value[0] != '(' && CurrentMatch.Groups[1].Value[0] != '[' && CurrentMatch.Groups[1].Value[0] != '\\')
                     {
@@ -282,28 +355,35 @@ namespace RegexAnalizer
                         //Aun no ha llegado ninguna barra 
                         else 
                         {
-                            if (char.IsDigit(CurrentMatch.Groups[1].Value[1]))
+                            try
                             {
-                                RegExItem group_reference = new RegExItem();
-                                group_reference.Subtipo = 300;
-                                group_reference.Tipo = 1;
-                                group_reference.Valor = CurrentMatch.Groups[1].Value[1].ToString();
-                                insertar(result, group_reference, CurrentMatch.Groups[3].Value);
-                            }
-                            else
-                            {
-                                RegExItem letraBarra = caracter(CurrentMatch.Value[1]);
-                                letraBarra.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
-               /*Todo lo que encuentre despues de una barra pierde su significado exepto los metacaracteres*/
-                                if (letraBarra.Subtipo >= 100 && letraBarra.Subtipo <= 150 && ultimoEltodeArrayTipo.Tipo == 1 && (letraBarra.Repeticiones == "" || letraBarra.Repeticiones == null) && (ultimoEltodeArrayTipo.Repeticiones == "" || ultimoEltodeArrayTipo.Repeticiones == null) && ultimoEltodeArrayTipo.Subtipo == 0)
+                                if (char.IsDigit(CurrentMatch.Groups[1].Value[1]))
                                 {
-                                    ultimoEltodeArrayTipo.Valor = ultimoEltodeArrayTipo.Valor + CurrentMatch.Groups[1].Value[1];
+                                    RegExItem group_reference = new RegExItem();
+                                    group_reference.Subtipo = 300;
+                                    group_reference.Tipo = 1;
+                                    group_reference.Valor = CurrentMatch.Groups[1].Value[1].ToString();
+                                    insertar(result, group_reference, CurrentMatch.Groups[3].Value);
                                 }
                                 else
                                 {
-                                    insertar(result, letraBarra, CurrentMatch.Groups[3].Value);
+                                    RegExItem letraBarra = caracter(CurrentMatch.Value[1]);
+                                    letraBarra.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
+                                    /*Todo lo que encuentre despues de una barra pierde su significado exepto los metacaracteres*/
+                                    if (letraBarra.Subtipo >= 100 && letraBarra.Subtipo <= 150 && ultimoEltodeArrayTipo.Tipo == 1 && (letraBarra.Repeticiones == "" || letraBarra.Repeticiones == null) && (ultimoEltodeArrayTipo.Repeticiones == "" || ultimoEltodeArrayTipo.Repeticiones == null) && ultimoEltodeArrayTipo.Subtipo == 0)
+                                    {
+                                        ultimoEltodeArrayTipo.Valor = ultimoEltodeArrayTipo.Valor + CurrentMatch.Groups[1].Value[1];
+                                    }
+                                    else
+                                    {
+                                        insertar(result, letraBarra, CurrentMatch.Groups[3].Value);
+                                    }
                                 }
                             }
+                            catch (System.IndexOutOfRangeException e)
+                            {
+                                result.Componentes.Add(GenerarError(CurrentMatch.ToString()));
+                            }                           
                         }
                     }
                     if (CurrentMatch.Groups[1].Value[0] == '[')
@@ -358,8 +438,11 @@ namespace RegexAnalizer
                                 }
                                 if (variable[0] == '(' && variable[variable.Length - 1] == ')'  && splitPar(variable).Count == 1)
                                 {
-                                    var eltosParentesisInter = analize(variable.Substring(1, (variable.Length - 2)), false);
-                                    eltosParentesisInter.Tipo = 2;
+                                    //AKI
+                                    //var eltosParentesisInter = analize(variable.Substring(1, (variable.Length - 2)), false);
+                                    //eltosParentesisInter.Tipo = 2;
+                                    RegExItem eltosParentesisInter = busqueda_negativa(variable);
+                                    
                                     if (repeticiones)
                                     {
                                         eltosParentesisInter.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
@@ -379,7 +462,7 @@ namespace RegexAnalizer
                                         }
                                         else
                                         {
-                                            insertar((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1], eltosParentesisInter, CurrentMatch.Groups[3].Value);
+                                            insertar((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1], eltosParentesisInter, eltosParentesisInter.Repeticiones);
                                         }
                                     }
                                     else
@@ -389,7 +472,7 @@ namespace RegexAnalizer
                                 }
                                 else
                                 {
-                                    var eltosParentesis = analize((string)variable, false);
+                                    var eltosParentesis = analize((string)variable + CurrentMatch.Groups[3].Value, false);
                                     if (repeticiones)
                                     {
                                         eltosParentesis.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
@@ -438,8 +521,11 @@ namespace RegexAnalizer
                                 }
                                 if (variable[0] == '(' && variable[variable.Length - 1] == ')' && splitPar(variable).Count == 1)
                                 {
-                                    var eltosParentesisInter = analize(variable.Substring(1, (variable.Length - 2)), false);
-                                    eltosParentesisInter.Tipo = 2;
+                                    //AKI
+                                    //var eltosParentesisInter = analize(variable.Substring(1, (variable.Length - 2)), false);
+                                    //eltosParentesisInter.Tipo = 2;
+                                    RegExItem eltosParentesisInter = busqueda_negativa(variable);
+                                    
                                     if (segundo)
                                     {
                                         eltosParentesisInter.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);

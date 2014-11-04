@@ -54,18 +54,21 @@ $(document).ready(function () {
         else { $("#Button1").prop("disabled", false); }
     });
     $("#txtData").keyup(function () {
-        if ($("#txtData").val().length != 0) {
+        if ($("#txtData").val().length != 0)
+        {
             $("#Button1").prop("disabled", false);
-
-            if ($('#secondInput').length) {
-                if (currentExp != $("#txtData").val()) {
+            if ($('#secondInput').length)
+            {
+                if (currentExp != $("#txtData").val())
+                {
                     $("#Match").fadeOut();
                     $("#expresion").fadeOut();
                     $("#result").fadeOut();
                     $("#same").fadeOut();
                 }
-                else {
-                    $("#Match").fadeIn();
+                else
+                {
+                    if (!wrong) { $("#Match").fadeIn(); }
                     $("#expresion").fadeIn();
                     $("#result").fadeIn();
                     $("#same").fadeIn();
@@ -85,6 +88,7 @@ $(document).ready(function () {
     include("idiomas/" + idiomaElegido + ".js");
 
     $("#Button1").click(function () {
+        wrong = false;
         $("#result").fadeIn();
         $("#same").fadeIn();
         //Restaurar valores predeterminados
@@ -141,7 +145,7 @@ function tam_rectangulo(string, font, fontSize)
     return bBox.width;
 }
 
-//funcion que calcula que contiene un numero relativo del cual empezar a calcular en el eje Y
+//funcion que contiene un numero relativo del cual empezar a calcular en el eje Y
 function largo()
 {
     return 24;
@@ -153,23 +157,19 @@ y ademas en caso de que la expresion contenga \ las dobla y las muestra.
 function addInput()
 {
     if (wrong) {
-        if ($('#secondInput').length) {
+        //if ($('#secondInput').length) {
             $("#Match").fadeOut();
-        }
+        //}
     }
     else
     {
-        if ($('#secondInput').length) {
-            //Ejecutar si existe el elemento
-            $("#Match").fadeIn();
-        }
-        else
-        {
+        if ($('#secondInput').length == 0) {
             $("#Match").append("<input type='text' id='secondInput' placeholder='" + comprobar("match") + "' name='name'><input id='Button2' type='button' value='" + comprobar("match") + "'/><br/>");
-            doble_barra($('#txtData').val());
+            //doble_barra($('#txtData').val());
         }
+        $("#Match").fadeIn();
+        doble_barra($('#txtData').val());
     }
-    wrong = false;
 }
 
 /*funcion que para el caso tipo 3 arregla los elementos para que queden todos ajustados
@@ -189,7 +189,7 @@ function restarCy (actual, valor)
 function calcularCoordenadas(response, cx, cy) {
     response.cx = cx;
 
-    if (response.Tipo == 2)
+    if (response.Tipo == 2 && response.Subtipo != 1)
     {
         var_cant = var_cant + 1;
     }
@@ -299,7 +299,7 @@ function calcularCoordenadas(response, cx, cy) {
             }
         }
     }
-    lienzoEjeX = response.width + 35;
+    lienzoEjeX = response.width + 65;
     lienzoEjeY = response.height + 10;
     //Comprobar que si es muy grande el tamaño a dibujar que le coloque scroll al SVG
     if (lienzoEjeX > 1285.1999999999998)
@@ -321,20 +321,26 @@ function metaCaracter(response)
     }
 }
 
+//funciones que se encargan del parpadeo del error
+function parpadeo(re)
+{
+    function rojo() {
+        re.animate({ fill: '#9B2727' }, 1000, blanco);
+    }
+    function blanco() {
+        re.animate({ r: 6, fill: '#dae1e1' }, 1000, rojo);
+    }
+    rojo();
+}
+
 function dibujar(response, lienzo)
 {
     if (response.Tipo == -1) 
     {
+        wrong = true;
         var rect = lienzo.rect(response.cx, response.cy + centroLienzo, response.width, response.height, 3, 3).attr({ fill: "#dae1e1" });
-        lienzo.text((parseInt(response.cx) + parseInt(response.width / 2)), response.cy + centroLienzo + 10, comprobar(response.Valor)).attr({ 'font-size': 14, 'font-family': "Times" });
-        //funciones que se encargan del parpadeo del error
-        function rojo() {
-            rect.animate({ fill: '#9B2727' }, 1000, blanco);
-        }
-        function blanco() {
-            rect.animate({ r: 6, fill: '#dae1e1' }, 1000, rojo);
-        }
-        rojo();
+        lienzo.text((parseInt(response.cx) + parseInt(response.width / 2)), response.cy + centroLienzo + 10, comprobar(response.Valor)).attr({ 'font-size': 14, 'font-family': "Times" });       
+        parpadeo(rect);
     }
     if (response.Tipo == 1 || response.Tipo == 9)
     {
@@ -358,15 +364,10 @@ function dibujar(response, lienzo)
             //estos seran los Referencia de grupos que no estan
             if (response.Subtipo == 301)
             {
+                wrong = true;
                 var rectangulo = lienzo.rect(response.cx, response.cy + centroLienzo, response.width, response.height, 3, 3).attr({ fill: "#00B233", stroke: "#00B233" });
                 lienzo.text((parseInt(response.cx) + parseInt(response.width / 2)), response.cy + centroLienzo + 10, comprobar(response.Valor)).attr({ 'font-size': 14, 'font-family': "Times" });
-                function rojo() {
-                    rectangulo.animate({ fill: '#9B2727' }, 1000, blanco);
-                }
-                function blanco() {
-                    rectangulo.animate({ r: 6, fill: '#dae1e1' }, 1000, rojo);
-                }
-                rojo();
+                parpadeo(rectangulo);
             }
             else
             {
@@ -383,11 +384,17 @@ function dibujar(response, lienzo)
     }
     else
     {
-        if (response.Tipo == 2) {
+        if (response.Tipo == 2 && response.Subtipo != 1) {
             lienzo.rect(response.cx, response.cy + centroLienzo, response.width, response.height, 3, 3).attr({ 'stroke-dasharray': '--' });
             cantidadGrupos = cantidadGrupos + 1;
             lienzo.text(response.cx + 20, response.cy + centroLienzo - 6, comprobar("Grupo") + cantidadGrupos).attr({ 'font-size': 10 });
         }
+        if (response.Tipo == 2 && response.Subtipo == 1)
+        {
+            lienzo.rect(response.cx, response.cy + centroLienzo, response.width, response.height, 3, 3).attr({ 'stroke-dasharray': '--' });
+            lienzo.text(response.cx + 48, response.cy + centroLienzo - 6, comprobar("GrupoNegativo")).attr({ 'font-size': 10 });
+        }
+
         else
         {
             if (response.Tipo == 4)
@@ -548,6 +555,7 @@ function dibujar_Path_Repeticiones(response,lienzo)
                             }
                             else
                             {
+                                wrong = true;
                                 actual.Repeticiones = actual.Repeticiones.substr(1);
                                 var linea3 = lienzo.path("M" + (parseInt(actual.cx) + parseInt(actual.width) + parseInt(8)) + "," + tamano_mitad + " V" + (parseInt(actual.height / 2) + parseInt(tamano_mitad) + parseInt(10))).attr({ 'stroke-width': '2' });
                                 var inicio = (parseInt(actual.cx) + parseInt(actual.width) + parseInt(8));
@@ -614,10 +622,11 @@ function final_Barra(response,lienzo)
 
 function success(response) {
     if (response.Componentes.length == 0 && response.Valor == null) {
-        alert("Este Mensaje deberia ser diferente");
+        alert(comprobar("Expresión Vacía"));
     }
     else {
         var contenedor = $("#result")[0];
+        addInput();
         calcularCoordenadas(response, cx, cy);
         var lienzo = Raphael(contenedor, lienzoEjeX, lienzoEjeY);
         centroLienzo = lienzo.height / 2;
@@ -626,7 +635,6 @@ function success(response) {
         dibujar_Path_Repeticiones(response, lienzo);
         dibujar_inicio_fin(response, lienzo);
         desp = 0;
-        addInput();
     }
 }
 
@@ -659,8 +667,8 @@ function para_match(response)
         $("#expresion").append(saltoLinea);
         for (var i = 0; i < response.length; i++) {
             var contador_grupos = 0;
-            var palabraRojo = $('#secondInput').val().substr(0, response[i].Ind) + "<font color=red>" + $('#secondInput').val().substr(response[i].Ind, response[i].Len) + "</font>" + $('#secondInput').val().substr(response[i].Len + response[i].Ind);
-            $("#nueva").append('<tr><td>' + (parseInt(i) + parseInt(1)) + '</td><td><table><tr><td>' + palabraRojo + '</td></tr><tr id="blue' + i + '"></tr></table></td></tr>');
+            var palabraRojo = $('#secondInput').val().substr(0, response[i].Ind) + "<font color=#FF000D>" + $('#secondInput').val().substr(response[i].Ind, response[i].Len) + "</font>" + $('#secondInput').val().substr(response[i].Len + response[i].Ind);
+            $("#nueva").append('<tr><td>' + (parseInt(i) + parseInt(1)) + '</td><td><table id = "nueva"><tr><td>' + palabraRojo + '</td></tr><tr id="blue' + i + '"></tr></table></td></tr>');
             var ocurrencia = $('#secondInput').val().substr(response[i].Ind, response[i].Len);
             for (var j = 0; j < response[i].Grupos.length; j++) {
                 var inicio = response[i].Grupos[j] - response[i].Ind;
@@ -685,5 +693,5 @@ function crear_Tabla()
 }
 
 function error(response) {
-    add(response);
+    alert(comprobar("server"));
 }

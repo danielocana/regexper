@@ -25,5 +25,8 @@ var msg = {
     "Nueva linea": "Nueva linea",
     "Salto de página": "Salto de página",
     "Retorno de carro": "Retorno de carro",
-    use:"Use la expresión siguiente: "
+    use: "Use la expresión siguiente: ",
+    "Expresión Vacía": "Expresión Vacía",
+    server: "Error en el Servidor",
+    GrupoNegativo: "Negación Adelantada"
 };

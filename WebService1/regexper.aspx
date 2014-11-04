@@ -35,7 +35,7 @@
                         <input id="Button1" type="button"  value="<asp:Literal ID='Literal3' runat='server' Text='<%$ Resources : b1%>' />"/>
                     <br/>           
                 </div>
-                <span id="same"></span>
+                <div id="same"></div>
                 <div id="Match">                        
                 </div>
             </form>

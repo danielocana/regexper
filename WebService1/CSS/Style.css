@@ -10,20 +10,6 @@ header {
     margin-top: -23px;
     padding: 1.5em 2em;
 }
-/*Estilo para la tabla que mostrara las ocurrencias*/
-#nueva {
-    border: 1px solid #000;
-    margin-left: 20%;
-    top:30px;
-    width: 60%;
-}
-th, td {
-   width: 25%;
-   text-align: left;
-   vertical-align: top;
-   border: 1px solid #000;
-   text-align: center;
-}
 #content {
     margin-top: 33px;
 }
@@ -124,9 +110,27 @@ svg {
 footer {
     font-size: 12px;
     margin-left: -32px;
+    margin-top: 3%;
 }
 #list li {
     border-right: 1px solid #000;
     display: inline-block;
     padding: 0 5px;
+}
+/*Estilo para la tabla que mostrara las ocurrencias*/
+#nueva {
+    border: 1px solid #000;
+    margin-left: 20%;
+    top:30px;
+    width: 60%;
+    background: slategrey;
+    border-radius: 5px;
+}
+
+th, td {
+    background: none repeat scroll 0 0 #f8f8f8;
+    border: 3px solid #fff;
+    padding: 5px;
+    text-align: center;
+    width: 25%;
 }

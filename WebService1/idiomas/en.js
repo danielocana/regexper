@@ -25,5 +25,8 @@ var msg = {
     "Nueva linea": "New line",
     "Salto de página": "Form feed",
     "Retorno de carro": "Carriage return",
-    use: "Use this expression: "
+    use: "Use this expression: ",
+    "Expresión Vacía": "Empty Expresion",
+    server: "Server Error",
+    GrupoNegativo: "Negative Lookahead"
 };

@@ -55,6 +55,8 @@
     <Content Include="CSS\Style.css" />
     <Content Include="idiomas\en.js" />
     <Content Include="idiomas\es.js" />
+    <Content Include="images\fondo.png" />
+    <Content Include="images\ic_tune_black_24dp.png" />
     <Content Include="images\ulpgc.png" />
     <Content Include="Libreria\Code.js" />
     <Content Include="Libreria\Jquery 2.1.1.js" />

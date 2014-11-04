@@ -57,5 +57,50 @@ namespace RegexAnalizer
             copy.valor = valor;
             return copy;
         }
+
+        public override int GetHashCode()
+        {
+            return this.Valor.GetHashCode();
+        }
+
+        public override bool Equals(Object e)
+        {
+            if (e == null)
+            {
+                return false;
+            }
+            else
+            {
+                if (((RegExItem)e).Tipo != this.Tipo)
+                {
+                    return false;
+                }
+                if (((RegExItem)e).Subtipo != this.Subtipo)
+                {
+                    return false;
+                }
+                if (((RegExItem)e).Valor != this.Valor)
+                {
+                    return false;
+                }
+                if (((RegExItem)e).Repeticiones != this.Repeticiones)
+                {
+                    return false;
+                }
+                if (((RegExItem)e).Componentes.Count != this.Componentes.Count)
+                {
+                    return false;
+                }
+                for (int i = 0; i < ((RegExItem)e).Componentes.Count; i++)
+                {
+
+                    if (!((RegExItem)((RegExItem)e).Componentes[i]).Equals((RegExItem)this.Componentes[i]))
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
     }
 }
