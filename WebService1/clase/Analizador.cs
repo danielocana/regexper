@@ -169,7 +169,12 @@ namespace RegexAnalizer
         //Verificar si un elemento tiene repeticiones
         public bool hayRepeticiones(string rep)
         {
-            return rep == null || rep == "";
+            if (rep == null || rep == "")
+            {
+                return false;
+            }
+            else { return true; }
+            //return rep == null || rep == "";
         }
 
         //Obtener el ultimo elemento del Array
@@ -188,9 +193,10 @@ namespace RegexAnalizer
         //Diferenciar los tipos para unir o no dos elementos
         public bool acumulable(RegExItem letraBarra, RegExItem ultimo_elemento)
         {
-            return (letraBarra.Subtipo >= 100 && letraBarra.Subtipo <= 150 && ultimo_elemento.Tipo == 1 &&
+            bool result = (letraBarra.Subtipo >= 100 && letraBarra.Subtipo <= 150 && ultimo_elemento.Tipo == 1 &&
                 !hayRepeticiones(letraBarra.Repeticiones) && !hayRepeticiones(ultimo_elemento.Repeticiones) &&
                 (ultimo_elemento.Subtipo == 0 || ultimo_elemento.Subtipo == 100));
+            return result;
         }
 
         //Metodo principal que va recorriendo la ER y crea el objeto a devolver por el Servidor

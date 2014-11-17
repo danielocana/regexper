@@ -30,7 +30,7 @@ namespace WebService1
             return inputWeb;
         }
         [WebMethod]
-        public ArrayList analizar_match(string reg, string m)
+        public ArrayList analizar_ocurrencia(string reg, string m)
         {
             ArrayList match_web = analizador.analize_macht(reg, m);
             return match_web;

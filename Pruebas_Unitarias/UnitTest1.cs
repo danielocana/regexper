@@ -178,7 +178,7 @@ namespace Pruebas_Unitarias
 
             RegExItem grupoDos = new RegExItem(null, 2, 0, "");
 
-            RegExItem a = new RegExItem(null, 2, 0, "");
+            RegExItem grupoTres = new RegExItem(null, 2, 0, "");
 
             RegExItem tercero = new RegExItem(null, 3, 0, null);
 
@@ -217,52 +217,52 @@ namespace Pruebas_Unitarias
             RegExItem digito = new RegExItem("Digito", 1, 255, "");
             SegundoCamino.Componentes.Add(digito);
             tercero.Componentes.Add(SegundoCamino);
-            a.Componentes.Add(tercero);
+            grupoTres.Componentes.Add(tercero);
 
-            RegExItem b = new RegExItem(null, 2, 0, "");
+            RegExItem grupoCinco = new RegExItem(null, 2, 0, "");
 
-            RegExItem bc = new RegExItem(null, 4, 2, "");
+            RegExItem Tipo_4 = new RegExItem(null, 4, 2, "");
 
             RegExItem bcd = new RegExItem("-", 1, 0, null);
-            bc.Componentes.Add(bcd);
+            Tipo_4.Componentes.Add(bcd);
 
-            RegExItem bce = new RegExItem("/", 1, 0, null);
-            bc.Componentes.Add(bce);
-            b.Componentes.Add(bc);
+            RegExItem barra_inversa = new RegExItem("/", 1, 0, null);
+            Tipo_4.Componentes.Add(barra_inversa);
+            grupoCinco.Componentes.Add(Tipo_4);
 
-            RegExItem c = new RegExItem(null, 2, 0, "");
+            RegExItem grupoSeis = new RegExItem(null, 2, 0, "");
 
-            RegExItem cIn = new RegExItem(null, 3, 0, null);
+            RegExItem Tipo_3 = new RegExItem(null, 3, 0, null);
 
-            RegExItem cIn1 = new RegExItem(null, 0, 0, null);
+            RegExItem Tipo_3_Inter1 = new RegExItem(null, 0, 0, null);
 
-            RegExItem cInO = new RegExItem("0", 1, 0, "");
-            cIn1.Componentes.Add(cInO);
+            RegExItem Tipo_3_Inter2 = new RegExItem("0", 1, 0, "");
+            Tipo_3_Inter1.Componentes.Add(Tipo_3_Inter2);
 
-            RegExItem cInOI = new RegExItem(null, 4, 2, "");
+            RegExItem Tipo_3_Inter_Cor = new RegExItem(null, 4, 2, "");
 
-            RegExItem neun = new RegExItem("1-9", 9, 0, null);
-            cInOI.Componentes.Add(neun);
-            cIn1.Componentes.Add(cInOI);
-            cIn.Componentes.Add(cIn1);
+            RegExItem rango1 = new RegExItem("1-9", 9, 0, null);
+            Tipo_3_Inter_Cor.Componentes.Add(rango1);
+            Tipo_3_Inter1.Componentes.Add(Tipo_3_Inter_Cor);
+            Tipo_3.Componentes.Add(Tipo_3_Inter1);
 
-            RegExItem cIn2 = new RegExItem(null, 0, 0, null);
+            RegExItem Tipo3_Inter3 = new RegExItem(null, 0, 0, null);
 
-            RegExItem cIn2O = new RegExItem("1", 1, 0, "");
-            cIn2.Componentes.Add(cIn2O);
+            RegExItem Tipo_3_simple = new RegExItem("1", 1, 0, "");
+            Tipo3_Inter3.Componentes.Add(Tipo_3_simple);
 
-            RegExItem cInrOI = new RegExItem(null, 4, 2, "");
+            RegExItem Corchetes = new RegExItem(null, 4, 2, "");
 
-            RegExItem rr = new RegExItem("0-2", 9, 0, null);
-            cInrOI.Componentes.Add(rr);
-            cIn2.Componentes.Add(cInrOI);
-            cIn.Componentes.Add(cIn2);
+            RegExItem rango2 = new RegExItem("0-2", 9, 0, null);
+            Corchetes.Componentes.Add(rango2);
+            Tipo3_Inter3.Componentes.Add(Corchetes);
+            Tipo_3.Componentes.Add(Tipo3_Inter3);
 
-            c.Componentes.Add(cIn);
+            grupoSeis.Componentes.Add(Tipo_3);
 
-            grupoDos.Componentes.Add(a);
-            grupoDos.Componentes.Add(b);
-            grupoDos.Componentes.Add(c);
+            grupoDos.Componentes.Add(grupoTres);
+            grupoDos.Componentes.Add(grupoCinco);
+            grupoDos.Componentes.Add(grupoSeis);
 
             RegExItem beforeGrupo2 = new RegExItem(null, 0, 0, null);
             beforeGrupo2.Componentes.Add(grupoDos);
@@ -276,98 +276,98 @@ namespace Pruebas_Unitarias
 
             RegExItem grupo8 = new RegExItem(null, 2, 0, "");
 
-            RegExItem tt = new RegExItem(null, 3, 0, null);
+            RegExItem Tipo_3_segundo = new RegExItem(null, 3, 0, null);
 
-            RegExItem re = new RegExItem(null, 0, 0, null);
+            RegExItem interno_Tipo_3_segundo = new RegExItem(null, 0, 0, null);
 
-            RegExItem itO = new RegExItem(null, 2, 0, "");
-            RegExItem itINO = new RegExItem("0", 1, 0, "");
-            itO.Componentes.Add(itINO);
-            re.Componentes.Add(itO);
-            RegExItem back5O = new RegExItem("5", 1, 300, "");
-            re.Componentes.Add(back5O);
+            RegExItem tipo_3_grupo1 = new RegExItem(null, 2, 0, "");
+            RegExItem tip_3_simple = new RegExItem("0", 1, 0, "");
+            tipo_3_grupo1.Componentes.Add(tip_3_simple);
+            interno_Tipo_3_segundo.Componentes.Add(tipo_3_grupo1);
+            RegExItem ref_grupoCinco = new RegExItem("5", 1, 300, "");
+            interno_Tipo_3_segundo.Componentes.Add(ref_grupoCinco);
 
-            RegExItem grupoDoceO = new RegExItem(null, 2, 0, "");
+            RegExItem grupoDoce_cero = new RegExItem(null, 2, 0, "");
 
-            RegExItem tresKO = new RegExItem(null, 3, 0, null);
+            RegExItem tipo_3_doce = new RegExItem(null, 3, 0, null);
 
-            RegExItem tresKCO = new RegExItem(null, 0, 0, null);
+            RegExItem interno_tipo3_doce = new RegExItem(null, 0, 0, null);
 
             RegExItem ceroKO = new RegExItem("0", 1, 0, "");
-            tresKCO.Componentes.Add(ceroKO);
-            RegExItem unoKO = new RegExItem(null, 4, 2, "");
-            RegExItem unoK0O = new RegExItem("4", 1, 0, null);
-            unoKO.Componentes.Add(unoK0O);
-            RegExItem unoK1O = new RegExItem("6", 1, 0, null);
-            unoKO.Componentes.Add(unoK1O);
-            RegExItem unoK2O = new RegExItem("9", 1, 0, null);
-            unoKO.Componentes.Add(unoK2O);
+            interno_tipo3_doce.Componentes.Add(ceroKO);
+            RegExItem tipo4_doce = new RegExItem(null, 4, 2, "");
+            RegExItem simple_tipo4 = new RegExItem("4", 1, 0, null);
+            tipo4_doce.Componentes.Add(simple_tipo4);
+            RegExItem tipo4_simple2 = new RegExItem("6", 1, 0, null);
+            tipo4_doce.Componentes.Add(tipo4_simple2);
+            RegExItem tipo9 = new RegExItem("9", 1, 0, null);
+            tipo4_doce.Componentes.Add(tipo9);
 
-            tresKCO.Componentes.Add(unoKO);
-            tresKO.Componentes.Add(tresKCO);
+            interno_tipo3_doce.Componentes.Add(tipo4_doce);
+            tipo_3_doce.Componentes.Add(interno_tipo3_doce);
 
-            RegExItem tresKUO = new RegExItem(null, 0, 0, null);
-            RegExItem oneO = new RegExItem("11", 1, 0, "");
-            tresKUO.Componentes.Add(oneO);
+            RegExItem tipo3_segund = new RegExItem(null, 0, 0, null);
+            RegExItem simple_once = new RegExItem("11", 1, 0, "");
+            tipo3_segund.Componentes.Add(simple_once);
 
-            tresKO.Componentes.Add(tresKUO);
+            tipo_3_doce.Componentes.Add(tipo3_segund);
 
-            grupoDoceO.Componentes.Add(tresKO);
-            re.Componentes.Add(grupoDoceO);
+            grupoDoce_cero.Componentes.Add(tipo_3_doce);
+            interno_Tipo_3_segundo.Componentes.Add(grupoDoce_cero);
 
-            tt.Componentes.Add(re);
+            Tipo_3_segundo.Componentes.Add(interno_Tipo_3_segundo);
 
-            RegExItem rw = new RegExItem(null, 0, 0, null);
+            RegExItem grupo_cero_siguiente = new RegExItem(null, 0, 0, null);
 
-            RegExItem it = new RegExItem(null, 2, 0, "");
+            RegExItem grupo_X = new RegExItem(null, 2, 0, "");
             RegExItem itIN = new RegExItem("1", 1, 0, "");
-            it.Componentes.Add(itIN);
-            rw.Componentes.Add(it);
-            RegExItem back5 = new RegExItem("5", 1, 300, "");
-            rw.Componentes.Add(back5);
+            grupo_X.Componentes.Add(itIN);
+            grupo_cero_siguiente.Componentes.Add(grupo_X);
+            RegExItem refe_cinco = new RegExItem("5", 1, 300, "");
+            grupo_cero_siguiente.Componentes.Add(refe_cinco);
 
             RegExItem grupoDoce = new RegExItem(null, 2, 0, "");
 
-            RegExItem tresK = new RegExItem(null, 3, 0, null);
+            RegExItem tipo3_num = new RegExItem(null, 3, 0, null);
 
-            RegExItem tresKC = new RegExItem(null, 0, 0, null);
+            RegExItem tipo0_uno = new RegExItem(null, 0, 0, null);
 
-            RegExItem ceroK = new RegExItem("0", 1, 0, "");
-            tresKC.Componentes.Add(ceroK);
-            RegExItem unoK = new RegExItem(null, 4, 2, "");
-            RegExItem unoK0 = new RegExItem("1", 1, 0, null);
-            unoK.Componentes.Add(unoK0);
-            RegExItem unoK1 = new RegExItem("3", 1, 0, null);
-            unoK.Componentes.Add(unoK1);
-            RegExItem unoK2 = new RegExItem("5", 1, 0, null);
-            unoK.Componentes.Add(unoK2);
-            RegExItem unoK3 = new RegExItem("7", 1, 0, null);
-            unoK.Componentes.Add(unoK3);
-            RegExItem unoK4 = new RegExItem("8", 1, 0, null);
-            unoK.Componentes.Add(unoK4);
-            tresKC.Componentes.Add(unoK);
-            tresK.Componentes.Add(tresKC);
+            RegExItem tipo3_cero_X = new RegExItem("0", 1, 0, "");
+            tipo0_uno.Componentes.Add(tipo3_cero_X);
+            RegExItem cuatro_numeros = new RegExItem(null, 4, 2, "");
+            RegExItem uno_tipo3 = new RegExItem("1", 1, 0, null);
+            cuatro_numeros.Componentes.Add(uno_tipo3);
+            RegExItem uno_tipo3_2 = new RegExItem("3", 1, 0, null);
+            cuatro_numeros.Componentes.Add(uno_tipo3_2);
+            RegExItem simple_cinco = new RegExItem("5", 1, 0, null);
+            cuatro_numeros.Componentes.Add(simple_cinco);
+            RegExItem simple_siete = new RegExItem("7", 1, 0, null);
+            cuatro_numeros.Componentes.Add(simple_siete);
+            RegExItem simple_ocho = new RegExItem("8", 1, 0, null);
+            cuatro_numeros.Componentes.Add(simple_ocho);
+            tipo0_uno.Componentes.Add(cuatro_numeros);
+            tipo3_num.Componentes.Add(tipo0_uno);
 
-            RegExItem tresKU = new RegExItem(null, 0, 0, null);
-            RegExItem one = new RegExItem("1", 1, 0, "");
-            tresKU.Componentes.Add(one);
-            RegExItem tw = new RegExItem(null, 4, 2, "");
+            RegExItem tipo3_sig = new RegExItem(null, 0, 0, null);
+            RegExItem simple_uno = new RegExItem("1", 1, 0, "");
+            tipo3_sig.Componentes.Add(simple_uno);
+            RegExItem tipo4 = new RegExItem(null, 4, 2, "");
 
-            RegExItem tw1 = new RegExItem("0", 1, 0, null);
+            RegExItem tipo4_uno = new RegExItem("0", 1, 0, null);
 
-            RegExItem tw2 = new RegExItem("2", 1, 0, null);
+            RegExItem tipo4_dos = new RegExItem("2", 1, 0, null);
 
-            tw.Componentes.Add(tw1);
-            tw.Componentes.Add(tw2);
-            tresKU.Componentes.Add(tw);
+            tipo4.Componentes.Add(tipo4_uno);
+            tipo4.Componentes.Add(tipo4_dos);
+            tipo3_sig.Componentes.Add(tipo4);
 
-            tresK.Componentes.Add(tresKU);
+            tipo3_num.Componentes.Add(tipo3_sig);
 
-            grupoDoce.Componentes.Add(tresK);
-            rw.Componentes.Add(grupoDoce);
+            grupoDoce.Componentes.Add(tipo3_num);
+            grupo_cero_siguiente.Componentes.Add(grupoDoce);
 
-            tt.Componentes.Add(rw);
-            grupo8.Componentes.Add(tt);
+            Tipo_3_segundo.Componentes.Add(grupo_cero_siguiente);
+            grupo8.Componentes.Add(Tipo_3_segundo);
             grupo7.Componentes.Add(grupo8);
             RegExItem before7 = new RegExItem(null, 0, 0, null);
 

@@ -110,7 +110,7 @@ $(document).ready(function () {
     $("#Match").on("click", "#Button2", function () {
         $("#expresion").empty();
         $("#expresion").show();
-        WebService1.Service1.analizar_match($("#txtData").val(), $("#secondInput").val(), successMatch, error);
+        WebService1.Service1.analizar_ocurrencia($("#txtData").val(), $("#secondInput").val(), successMatch, error);
     });
 
     $("#secondInput").focus();
@@ -456,15 +456,10 @@ function dibujarPath(response, lienzo)
                 lienzo.path("M" + (parseInt(ultimo.cx) + parseInt(ultimo.width)) + "," + tamano_mitad + " H" + (parseInt(response.width) + parseInt(response.cx))).attr({ 'stroke-width': "2" });
             }
         }
-        if (response.Tipo == 3)
+        if (response.Tipo == 3 || response.Tipo == 4)
         {
             inicio_Barra(response,lienzo);
             final_Barra(response,lienzo);
-        }
-        if (response.Tipo == 4)
-        {
-            inicio_Barra(response, lienzo);
-            final_Barra(response, lienzo);
         }
     }
 }
@@ -662,8 +657,6 @@ function para_match(response)
         $("#expresion").append(saltoLinea + saltoLinea);   
     }
     else {
-        var Input_Ocurrencia_Tratada = $('#secondInput').val().replace(/</gi, '&lt;');
-        alert(Input_Ocurrencia_Tratada);
         $('#expresion').append('<div id="close">&nbsp;&nbsp;X</div>');        
         var tabla;
         $("#expresion").append(saltoLinea);
@@ -671,14 +664,14 @@ function para_match(response)
         $("#expresion").append(saltoLinea);
         for (var i = 0; i < response.length; i++) {
             var contador_grupos = 0;
-            var palabraRojo = $('#secondInput').val().substr(0, response[i].Ind) + "<font color=#FF000D>" + $('#secondInput').val().substr(response[i].Ind, response[i].Len) + "</font>" + $('#secondInput').val().substr(response[i].Len + response[i].Ind);
+            var palabraRojo = $('#secondInput').val().substr(0, response[i].Ind).replace(/</g, '&lt;') + "<font color=#FF000D>" + $('#secondInput').val().substr(response[i].Ind, response[i].Len).replace(/</g, '&lt;') + "</font>" + $('#secondInput').val().substr(response[i].Len + response[i].Ind).replace(/</g, '&lt;');
             $("#nueva").append('<tr><td>' + (parseInt(i) + parseInt(1)) + '</td><td><table id = "nueva"><tr><td>' + palabraRojo + '</td></tr><tr id="blue' + i + '"></tr></table></td></tr>');
             var ocurrencia = $('#secondInput').val().substr(response[i].Ind, response[i].Len);
             for (var j = 0; j < response[i].Grupos.length; j++) {
                 var inicio = response[i].Grupos[j] - response[i].Ind;
                 var fin = response[i].Grupos[++j];
                 if (fin > 0) {
-                    var palabraAzul = ocurrencia.substr(0, inicio) + "<font color=blue>" + ocurrencia.substr(inicio, fin) + "</font>" + ocurrencia.substr(inicio + fin) + saltoLinea;
+                    var palabraAzul = ocurrencia.substr(0, inicio).replace(/</g, '&lt;') + "<font color=blue>" + ocurrencia.substr(inicio, fin).replace(/</g, '&lt;') + "</font>" + ocurrencia.substr(inicio + fin).replace(/</g, '&lt;') + saltoLinea;
                     tabla = '<table><tr><td>' + comprobar("Grupo") + contador_grupos + '</td><td>' + palabraAzul + '</td></tr></table>';
                     $('#blue' + i).append(tabla);
                     contador_grupos = contador_grupos + 1;
