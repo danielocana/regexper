@@ -10,6 +10,14 @@ namespace RegexAnalizer
     {
         int tipo; // 0 -> secuencia; 1 -> elemento simple; 2 -> grupo (paréntesis)
         // 3 -> alternativa (|); 4 -> alternativa (corchetes) // -1 -> error
+        public RegExItem(string Valor, int Tipo, int Subtipo, string Repeticiones)
+        {
+            this.valor = Valor;
+            this.tipo = Tipo;
+            this.subtipo = Subtipo;
+            this.repeticiones = Repeticiones;
+            componentes = new ArrayList();
+        }
         public RegExItem()
         {
             componentes = new ArrayList();

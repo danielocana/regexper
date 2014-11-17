@@ -14,6 +14,7 @@ var centroLienzo = 0;
 var currentExp = "";
 
 var idiomaElegido = idioma();
+//Funcion para detecar el idioma del navegador
 function idioma()
 {
     var navegador = navigator.language;
@@ -97,21 +98,19 @@ $(document).ready(function () {
         $("#result").empty();
         $("#same").empty();
         $('#expresion').empty();
-        WebService1.Service1.send($("#txtData").val(), success, error);
+        WebService1.Service1.analizar($("#txtData").val(), success, error);
 
         //llamar a funcion que agrega la expresion al div expresion donde se pondra la tabla que tiene los match
         addDivExpresion();
-        $("#jugando").fadeIn();
         document.getElementById("result").style.overflowX = "";        
         $("#expresion").css('position', '');
         currentExp = $("#txtData").val();
     });
 
     $("#Match").on("click", "#Button2", function () {
-        $("#same").empty();
         $("#expresion").empty();
         $("#expresion").show();
-        WebService1.Service1.check($("#txtData").val(), $("#secondInput").val(), successMatch, error);
+        WebService1.Service1.analizar_match($("#txtData").val(), $("#secondInput").val(), successMatch, error);
     });
 
     $("#secondInput").focus();
@@ -156,16 +155,13 @@ y ademas en caso de que la expresion contenga \ las dobla y las muestra.
 */
 function addInput()
 {
-    if (wrong) {
-        //if ($('#secondInput').length) {
+    if (wrong) {        
             $("#Match").fadeOut();
-        //}
     }
     else
     {
         if ($('#secondInput').length == 0) {
             $("#Match").append("<input type='text' id='secondInput' placeholder='" + comprobar("match") + "' name='name'><input id='Button2' type='button' value='" + comprobar("match") + "'/><br/>");
-            //doble_barra($('#txtData').val());
         }
         $("#Match").fadeIn();
         doble_barra($('#txtData').val());
@@ -186,14 +182,13 @@ function restarCy (actual, valor)
     }
 }
 
+//Funcion que calcula para cada RegexItem su posicion donde tiene que ir
 function calcularCoordenadas(response, cx, cy) {
     response.cx = cx;
-
-    if (response.Tipo == 2 && response.Subtipo != 1)
+    if (response.Tipo == 2 && response.Subtipo == 0)
     {
         var_cant = var_cant + 1;
     }
-
     if (response.Subtipo == 300)
     {
         if (response.Valor > var_cant)
@@ -271,12 +266,11 @@ function calcularCoordenadas(response, cx, cy) {
                 }
                 for (var i = 0; i < response.Componentes.length; i++) {
                     var actual = response.Componentes[i];
-                    /*comprobrar aqui que si hay repeticiones necesito mas espacio*/
+                    /*En este punto se tiene en cuenta si el elemento tiene repeticiones entonces sumar mas al elto localCx*/
                     if (actual.Repeticiones != null && actual.Repeticiones != "") {
                         calcularCoordenadas(actual, localCx + 20, localCy);
                     }
-                    else { calcularCoordenadas(actual, localCx + 10, localCy); }
-                    
+                    else { calcularCoordenadas(actual, localCx + 10, localCy); }                    
                     localCx = actual.cx + actual.width + 10;  /*+10 para que se separe un poco el sgte elto*/
                     var inc = (actual.Repeticiones != "") ? 30 : 10;
                     if (actual.height + inc > localHeigth) {
@@ -290,7 +284,7 @@ function calcularCoordenadas(response, cx, cy) {
                 else { ultimo = {cx : response.cx, width : 0}}
                 var inc = (ultimo.Repeticiones != "") ? 20 : 10;
                 response.width = (ultimo.cx + ultimo.width) - response.cx + inc;
-                //preguntar si es tipo 3 el componente de grupo y sumar +10
+                /*Si es tipo 3 el componente de grupo y sumar +10*/
                 if (response.Componentes.length == 1 && response.Componentes[0].Tipo == 3) {
                     response.height = response.Componentes[0].height;
                 }
@@ -301,10 +295,10 @@ function calcularCoordenadas(response, cx, cy) {
     }
     lienzoEjeX = response.width + 65;
     lienzoEjeY = response.height + 10;
-    //Comprobar que si es muy grande el tamaño a dibujar que le coloque scroll al SVG
+    /*Comprobar que si es muy grande el tamaño a dibujar para colocar, scroll al SVG*/
     if (lienzoEjeX > 1285.1999999999998)
     {
-        lienzoEjeX = lienzoEjeX + 35; //Añado un poco mas para luego pintar el circulo final del dibujo
+        lienzoEjeX = lienzoEjeX + 35; //Añado un poco mas para luego pintar el circulo final del automata
         document.getElementById("result").style.overflowX = "scroll";
     }
 }
@@ -322,17 +316,18 @@ function metaCaracter(response)
 }
 
 //funciones que se encargan del parpadeo del error
-function parpadeo(re)
+function parpadeo(rec)
 {
     function rojo() {
-        re.animate({ fill: '#9B2727' }, 1000, blanco);
+        rec.animate({ fill: '#9B2727' }, 1000, blanco);
     }
     function blanco() {
-        re.animate({ r: 6, fill: '#dae1e1' }, 1000, rojo);
+        rec.animate({ r: 6, fill: '#dae1e1' }, 1000, rojo);
     }
     rojo();
 }
 
+//funcion que dibuja usando las coordenas calculadas anteriormente
 function dibujar(response, lienzo)
 {
     if (response.Tipo == -1) 
@@ -355,13 +350,13 @@ function dibujar(response, lienzo)
                 lienzo.rect(response.cx, response.cy + centroLienzo, response.width, response.height, 3, 3).attr({ fill: "#6b6659", stroke: "#6b6659" });
                 lienzo.text((parseInt(response.cx) + parseInt(response.width / 2)), response.cy + centroLienzo + 10, comprobar(response.Valor)).attr({ fill: "#ffffff", 'font-size': 14, 'font-family': "Times" });
             }
-            //estos seran los Referencia de grupo
+            //Referencia de grupo y el grupo existe
             if (response.Subtipo == 300)
             {
                 lienzo.rect(response.cx, response.cy + centroLienzo, response.width, response.height, 3, 3).attr({ fill: "#00B233", stroke: "#00B233" });
                 lienzo.text((parseInt(response.cx) + parseInt(response.width / 2)), response.cy + centroLienzo + 10, comprobar(response.Valor)).attr({'font-size': 14, 'font-family': "Times" });
             }
-            //estos seran los Referencia de grupos que no estan
+            //Referencia de grupos que no estan
             if (response.Subtipo == 301)
             {
                 wrong = true;
@@ -384,7 +379,7 @@ function dibujar(response, lienzo)
     }
     else
     {
-        if (response.Tipo == 2 && response.Subtipo != 1) {
+        if (response.Tipo == 2 && response.Subtipo == 0) {
             lienzo.rect(response.cx, response.cy + centroLienzo, response.width, response.height, 3, 3).attr({ 'stroke-dasharray': '--' });
             cantidadGrupos = cantidadGrupos + 1;
             lienzo.text(response.cx + 20, response.cy + centroLienzo - 6, comprobar("Grupo") + cantidadGrupos).attr({ 'font-size': 10 });
@@ -394,7 +389,6 @@ function dibujar(response, lienzo)
             lienzo.rect(response.cx, response.cy + centroLienzo, response.width, response.height, 3, 3).attr({ 'stroke-dasharray': '--' });
             lienzo.text(response.cx + 48, response.cy + centroLienzo - 6, comprobar("GrupoNegativo")).attr({ 'font-size': 10 });
         }
-
         else
         {
             if (response.Tipo == 4)
@@ -424,6 +418,7 @@ function dibujar_inicio_fin(response, lienzo)
     lienzo.circle((parseInt(response.cx) + parseInt(response.width) + parseInt(5)), centroLienzo, 5).attr({ fill: "#6b6659", stroke: "#000", 'stroke-width': "2" });
 }
 
+//funcion que conecta los dibujos realizados
 function dibujarPath(response, lienzo)
 {
     if (response.Tipo != 1 && response.Tipo != -1 && response.Tipo != 9)
@@ -433,7 +428,6 @@ function dibujarPath(response, lienzo)
             var actual = response.Componentes[i];
             dibujarPath(actual, lienzo);
             var siguiente = response.Componentes[i + 1];
-
             if (response.Tipo != 3 && response.Tipo != 4)
             {
                 var tamano_cuadrado = (parseInt(actual.cx) + parseInt(actual.width));
@@ -475,6 +469,7 @@ function dibujarPath(response, lienzo)
     }
 }
 
+//Funcion que dibuja las repeticiones para aquellos que las tengan
 function dibujar_Path_Repeticiones(response,lienzo)
 {
     for (var i = 0; i < response.Componentes.length; i++)
@@ -524,6 +519,7 @@ function dibujar_Path_Repeticiones(response,lienzo)
                     }
                     else
                     {
+                        /*Las repeticiones vienen desde el server con una marca la letra b significa que todo esta correcto*/
                         if (actual.Repeticiones.substr(0, 1) == 'b')
                         {
                             actual.Repeticiones = actual.Repeticiones.substr(1);
@@ -593,6 +589,7 @@ function dibujar_Path_Repeticiones(response,lienzo)
     }
 }
 
+//Funcion que dibuja el inicio del camino de la |
 function inicio_Barra(response, lienzo)
 {
     var primero = response.Componentes[0];
@@ -606,6 +603,7 @@ function inicio_Barra(response, lienzo)
     lienzo.path("M" + response.cx + "," + tamano_mitad + " V" + fin).attr({ 'stroke-width': "2" });
 }
 
+//Funcion que dibuja el final del camino de la |
 function final_Barra(response,lienzo)
 {
     var primero = response.Componentes[0];
@@ -620,13 +618,13 @@ function final_Barra(response,lienzo)
     lienzo.path("M" + (parseInt(response.cx) + parseInt(response.width)) + "," + tamano_mitad + " V" + fin).attr({ 'stroke-width': "2" });
 }
 
+//Funcion que se llama en Visualizar
 function success(response) {
     if (response.Componentes.length == 0 && response.Valor == null) {
         alert(comprobar("Expresión Vacía"));
     }
     else {
         var contenedor = $("#result")[0];
-        addInput();
         calcularCoordenadas(response, cx, cy);
         var lienzo = Raphael(contenedor, lienzoEjeX, lienzoEjeY);
         centroLienzo = lienzo.height / 2;
@@ -634,15 +632,18 @@ function success(response) {
         dibujarPath(response, lienzo);
         dibujar_Path_Repeticiones(response, lienzo);
         dibujar_inicio_fin(response, lienzo);
+        addInput();
         desp = 0;
     }
 }
 
+//Funcion que se llama en Ocurrencia
 function successMatch(response)
 {
     para_match(response);
 }
 
+//Funcion para doblar las barras para llevarlas a Java
 function doble_barra(texto)
 {
     if (texto.indexOf("\\") > -1)
@@ -652,6 +653,7 @@ function doble_barra(texto)
     }
 }
 
+//Funcion que va creado una tabla dinamica con los elementos devueltos del servidor
 function para_match(response)
 {
     if (response.length == 0) {
@@ -660,6 +662,8 @@ function para_match(response)
         $("#expresion").append(saltoLinea + saltoLinea);   
     }
     else {
+        var Input_Ocurrencia_Tratada = $('#secondInput').val().replace(/</gi, '&lt;');
+        alert(Input_Ocurrencia_Tratada);
         $('#expresion').append('<div id="close">&nbsp;&nbsp;X</div>');        
         var tabla;
         $("#expresion").append(saltoLinea);
@@ -686,12 +690,14 @@ function para_match(response)
     $("#expresion").css('position', 'relative');
 }
 
+//funcion para crear una tabla
 function crear_Tabla()
 {
     var tabla = '<table id = "nueva"><tr><td>' + comprobar("match") + '</td><td>'+ comprobar("valor")+'</td></tr></table>'
     $("#expresion").append(tabla);
 }
 
+//funcion que mostrara en caso de error
 function error(response) {
     alert(comprobar("server"));
 }

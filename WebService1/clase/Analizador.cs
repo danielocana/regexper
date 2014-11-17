@@ -47,7 +47,8 @@ namespace RegexAnalizer
             return cadena;
         }
 
-        public int[] rep_digitos(string cadena)
+        //metodo que separa los dos numeros de las repeticiones en dos posiciones de un vector convertidos a numeros, para luego compararlos
+        public int[] repeticion_digitos(string cadena)
         {
             char[] MyChar = { '{', '}' };
             string nueva_repeticion = cadena.TrimEnd(MyChar);
@@ -64,6 +65,7 @@ namespace RegexAnalizer
             return numero;
         }
 
+        //metodo que parametriza las repeticiones y les coloca una marca para luego en javascript saber que pintar
         public string Tratar_repeticiones(string repeticiones)
         {
             if (repeticiones == null)
@@ -91,7 +93,7 @@ namespace RegexAnalizer
                     }
                     if (Regex.IsMatch(nueva_repeticion, @"^\d+,\d+$"))
                     {
-                        int[] comparar = rep_digitos(repeticiones);
+                        int[] comparar = repeticion_digitos(repeticiones);
                         if (comparar[0] <= comparar[1])
                         {
                             if (Regex.IsMatch(comparar[0].ToString(), @"^0+$"))
@@ -120,7 +122,7 @@ namespace RegexAnalizer
             }
         }
 
-//Este metodo se llamara antes de insertar en el result dado que si las repeticiones son pe: a{0} || a{0,0} no poner ese elemento en el result
+       //Este metodo se llamara antes de insertar en el result dado que si las repeticiones son pe: a{0} || a{0,0} no poner ese elemento en el result
         public void insertar(RegExItem result, RegExItem actual, string repeticiones)
         {
             if ((repeticiones== null) || (!(Regex.IsMatch(repeticiones, @"^{0+}$")) && !(Regex.IsMatch(repeticiones, @"^{0+,0+}$"))))
@@ -130,7 +132,7 @@ namespace RegexAnalizer
             }
         }
 
-        //Este metodo se encargara en caso de encontrar los simbolos ?! en el principio de los parentesis.
+        /*Este metodo se encargara en caso de encontrar los simbolos ?! en el principio de los parentesis.*/
         public RegExItem busqueda_negativa(string variable)
         {
             RegExItem eltosParentesisInter;
@@ -141,314 +143,200 @@ namespace RegexAnalizer
             }
             if (inicio == "?!")
             {
+                //Caso (?!Expresion_Regular)
                 eltosParentesisInter = analize(variable.Substring(3, (variable.Length - 4)), false);
                 eltosParentesisInter.Tipo = 2;
                 eltosParentesisInter.Subtipo = 1; //Para este caso es negativo
             }
             else
             {
-                //Para este caso el proceso es normal
-                eltosParentesisInter = analize(variable.Substring(1, (variable.Length - 2)), false);
-                eltosParentesisInter.Tipo = 2; 
+                if (inicio == "?:")
+                {
+                    eltosParentesisInter = analize(variable.Substring(3, (variable.Length - 4)), false);
+                    eltosParentesisInter.Tipo = 2;
+                    eltosParentesisInter.Subtipo = 2; //Para este caso no cuenta como grupo
+                }
+                else
+                {
+                    //Para este caso el proceso es normal
+                    eltosParentesisInter = analize(variable.Substring(1, (variable.Length - 2)), false);
+                    eltosParentesisInter.Tipo = 2;
+                }
             }
             return eltosParentesisInter;
         }
 
+        //Verificar si un elemento tiene repeticiones
+        public bool hayRepeticiones(string rep)
+        {
+            return rep == null || rep == "";
+        }
+
+        //Obtener el ultimo elemento del Array
+        public RegExItem Ultimo(RegExItem r)
+        {
+            RegExItem ultimoEltodeArray = new RegExItem();
+            if (r.Componentes.Count != 0)
+            {
+                ultimoEltodeArray = (RegExItem)r.Componentes[r.Componentes.Count - 1];
+            }
+            else { ultimoEltodeArray.Tipo = 0; }
+
+            return ultimoEltodeArray;
+        }
+
+        //Diferenciar los tipos para unir o no dos elementos
+        public bool acumulable(RegExItem letraBarra, RegExItem ultimo_elemento)
+        {
+            return (letraBarra.Subtipo >= 100 && letraBarra.Subtipo <= 150 && ultimo_elemento.Tipo == 1 &&
+                !hayRepeticiones(letraBarra.Repeticiones) && !hayRepeticiones(ultimo_elemento.Repeticiones) &&
+                (ultimo_elemento.Subtipo == 0 || ultimo_elemento.Subtipo == 100));
+        }
+
+        //Metodo principal que va recorriendo la ER y crea el objeto a devolver por el Servidor
         public RegExItem analize(string input, bool inDeep)
         {
             RegExItem result = new RegExItem();
             result.Tipo = 0;
             int prev = 0;
             int prevLength = 0;
-
             foreach (Match CurrentMatch in getTokens(input))
             {
+                RegExItem ultimoEltodeArray = Ultimo(result);
+
                 if (CurrentMatch.Index != prev + prevLength)
                 {
-                    RegExItem ultimoEltodeArrayTipo = new RegExItem();
-                    if (result.Componentes.Count != 0)
+                    if (ultimoEltodeArray.Tipo == 3)
                     {
-                        ultimoEltodeArrayTipo = (RegExItem)result.Componentes[result.Componentes.Count - 1];
-                    }
-                    else { ultimoEltodeArrayTipo.Tipo = 0; }
-                    if (ultimoEltodeArrayTipo.Tipo == 3)
-                    {
-                        ((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1]).Componentes.Add(GenerarError(input.Substring(prev + prevLength, CurrentMatch.Index - (prev + prevLength))));
+                        ((RegExItem)ultimoEltodeArray.Componentes[ultimoEltodeArray.Componentes.Count - 1]).Componentes.Add(GenerarError(input.Substring(prev + prevLength, CurrentMatch.Index - (prev + prevLength))));
+                        ultimoEltodeArray = Ultimo(result);
                     }
                     else
                     {
                         result.Componentes.Add(GenerarError(input.Substring(prev + prevLength, CurrentMatch.Index - (prev + prevLength))));
-                    } 
+                        ultimoEltodeArray = Ultimo(result);
+                    }
                 }
                 prev = CurrentMatch.Index;
-                prevLength = CurrentMatch.Length;                
+                prevLength = CurrentMatch.Length;
+                string specialChars = "^$.";
+                if (specialChars.IndexOf(CurrentMatch.Groups[1].Value[0]) >= 0)
                 {
-                    /*Los subtipos 15 seran los caracertes que por si solo representan algo*/
-                    if (CurrentMatch.Groups[1].Value[0] == '^')
-                    {                        
-                        RegExItem startL = new RegExItem();
-                        startL.Valor = "Inicio de Linea";
-                        startL.Tipo = 1;
-                        startL.Subtipo = 15;
-                        if (result.Componentes.Count != 0)
-                        {
-                            RegExItem ultimoEltodeArrayTipo = (RegExItem)result.Componentes[result.Componentes.Count - 1];
-                            if (ultimoEltodeArrayTipo.Tipo == 3)
-                            {
-                                insertar((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1], startL, CurrentMatch.Groups[3].Value);
-                            }
-                            else 
-                            {
-                                startL.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
-                                result.Componentes.Add(startL); } 
-                        }
-                        else {
-                            startL.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
-                            result.Componentes.Add(startL); }                        
-                    }
-                    if (CurrentMatch.Groups[1].Value[0] == '$')
+                    string valor = "";
+                    switch (CurrentMatch.Groups[1].Value[0])
                     {
-                        RegExItem endL = new RegExItem();
-                        endL.Valor = "Final de linea";
-                        endL.Tipo = 1;
-                        endL.Subtipo = 15;
-                        if (result.Componentes.Count != 0)
-                        {
-                            RegExItem ultimoEltodeArrayTipo = (RegExItem)result.Componentes[result.Componentes.Count - 1];
-                            if (ultimoEltodeArrayTipo.Tipo == 3)
-                            {
-                                insertar((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1], endL, CurrentMatch.Groups[3].Value);
-                            }
-                            else {
-                                endL.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
-                                result.Componentes.Add(endL); } 
-                        }
-                        else {
-                            endL.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
-                            result.Componentes.Add(endL); } 
+                        case '^': valor = "Inicio de Linea";
+                            break;
+                        case '$': valor = "Final de linea";
+                            break;
+                        case '.': valor = "Cualquier carácter";
+                            break;
                     }
-                    if (CurrentMatch.Groups[1].Value[0] == '.')
+                    RegExItem r = new RegExItem(valor, 1, 15, CurrentMatch.Groups[3].Value);
+                    if (result.Componentes.Count != 0)
                     {
-                        RegExItem anyL = new RegExItem();
-                        anyL.Valor = "Cualquier carácter";
-                        anyL.Tipo = 1;
-                        anyL.Subtipo = 15;
-                        if (result.Componentes.Count != 0)
-                        {
-                            RegExItem ultimoEltodeArrayTipo = (RegExItem)result.Componentes[result.Componentes.Count - 1];
-                            if (ultimoEltodeArrayTipo.Tipo == 3)
-                            {
-                                insertar((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1], anyL, CurrentMatch.Groups[3].Value);
-                            }
-                            else
-                            {
-                                anyL.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
-                                result.Componentes.Add(anyL);
-                            }
-                        }                        
-                        else {
-                            anyL.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
-                            result.Componentes.Add(anyL); }
-                    }
-                    if (CurrentMatch.Groups[1].Value[0] != '.' && CurrentMatch.Groups[1].Value[0] != '$' && CurrentMatch.Groups[1].Value[0] != '^' && CurrentMatch.Groups[1].Value[0] != '|' && CurrentMatch.Groups[1].Value[0] != '(' && CurrentMatch.Groups[1].Value[0] != '[' && CurrentMatch.Groups[1].Value[0] != '\\')
-                    {
-                        if (result.Componentes.Count == 0)
-                        {
-                            //result esta vacio
-                            insertar(result, GenerarSimple(CurrentMatch.Groups[1].Value), CurrentMatch.Groups[3].Value);
-                        }
-                        else
-                        {
-                            RegExItem ultimoEltodeArrayTipo = (RegExItem)result.Componentes[result.Componentes.Count - 1];
-                            if (result.Componentes.Count != 0)
-                            {
-                                if (ultimoEltodeArrayTipo.Tipo == 3)
-                                {
-                                    if ((((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1])).Componentes.Count == 0 && (((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1])).Valor == null)
-                                    {
-                                        RegExItem actual = new RegExItem();
-                                        actual.Valor = CurrentMatch.Groups[1].Value;
-                                        actual.Tipo = 1;
-                                        insertar((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1], actual, CurrentMatch.Groups[3].Value);
-                                    }
-                                    else
-                                    {
- //mirar si es tipo 1 el ultimo elemento de ultimoEltoArray, si no tiene repeticiones y que el currentMatch tampoco tenga repeticiones
-                                        var eltoAnterior = ((RegExItem)((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1]).Componentes[((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1]).Componentes.Count - 1]);
-                                        if (eltoAnterior.Tipo == 1 && (eltoAnterior.Subtipo >= 100 && eltoAnterior.Subtipo <=150 || eltoAnterior.Subtipo == 0) && CurrentMatch.Groups[3].Value == "" && eltoAnterior.Repeticiones == "")
-                                        {
-                                            string cadena = eltoAnterior.Valor;
-                                            eltoAnterior.Valor = cadena + CurrentMatch.ToString();
-                                        }
-                                        else
-                                        {
-                                            RegExItem actual = new RegExItem();
-                                            actual.Valor = CurrentMatch.Groups[1].Value;
-                                            actual.Tipo = 1;
-                                            insertar((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1],actual,CurrentMatch.Groups[3].Value);
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    if (ultimoEltodeArrayTipo.Tipo == 1 && CurrentMatch.Groups[3].Value == "" && ultimoEltodeArrayTipo.Repeticiones == "" && (ultimoEltodeArrayTipo.Subtipo >=100 && ultimoEltodeArrayTipo.Subtipo <= 150 || ultimoEltodeArrayTipo.Subtipo == 0))
-                                    {
-                                        ultimoEltodeArrayTipo.Valor = ultimoEltodeArrayTipo.Valor + CurrentMatch.ToString();
-                                        ultimoEltodeArrayTipo.Subtipo = 0;
-                                    }
-                                    else
-                                    {
-                                        //result no esta vacio y es simple el elemento aun no hay barra
-                                        insertar(result, GenerarSimple(CurrentMatch.Groups[1].Value), CurrentMatch.Groups[3].Value);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (CurrentMatch.Groups[1].Value[0] == '\\')
-                    {
-                        //Si antes habia una barra
-                        RegExItem ultimoEltodeArrayTipo = new RegExItem();
-                        if (result.Componentes.Count != 0)
-                        {
-                            ultimoEltodeArrayTipo = (RegExItem)result.Componentes[result.Componentes.Count - 1];
-                        }
-                        else
-                        {
-                            ultimoEltodeArrayTipo.Tipo = 0;
-                        }
+                        RegExItem ultimoEltodeArrayTipo = (RegExItem)result.Componentes[result.Componentes.Count - 1];
                         if (ultimoEltodeArrayTipo.Tipo == 3)
                         {
-                            if (char.IsDigit(CurrentMatch.Groups[1].Value[1]))
+                            insertar((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1], r, r.Repeticiones);
+                        }
+                        else
+                        {
+                            result.Componentes.Add(r);
+                        }
+                    }
+                    else
+                    {
+                        result.Componentes.Add(r);
+                    }
+                }
+                else
+                {
+                    switch (CurrentMatch.Groups[1].Value[0])
+                    {
+                        case '\\':
+                            RegExItem target;
+                            if (ultimoEltodeArray.Tipo == 3)
                             {
-                                RegExItem group_reference = new RegExItem();
-                                group_reference.Subtipo = 300;
-                                group_reference.Tipo = 1;
-                                group_reference.Valor = CurrentMatch.Groups[1].Value[1].ToString();
-                                insertar((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1], group_reference, CurrentMatch.Groups[3].Value);
+                                target = (RegExItem)ultimoEltodeArray.Componentes[ultimoEltodeArray.Componentes.Count - 1];
                             }
                             else
                             {
-                                RegExItem letraBarra = caracter(CurrentMatch.Value[1]);
-                                letraBarra.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
-                                //ACCEDER AL COMPONENTE DEL COMPONENTE DE RESULT
-                                RegExItem ultimo_elemento_tipo3 = new RegExItem();
-                                if (((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1]).Componentes.Count != 0)
-                                {
-                                    ultimo_elemento_tipo3 = ((RegExItem)((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1]));
-                                    ultimo_elemento_tipo3 = (RegExItem)ultimo_elemento_tipo3.Componentes[ultimo_elemento_tipo3.Componentes.Count - 1];
-                                }
-                                else
-                                {
-                                    ultimo_elemento_tipo3.Tipo = 0;
-                                }
-                                if (letraBarra.Subtipo >= 100 && letraBarra.Subtipo <= 150 && ultimo_elemento_tipo3.Tipo == 1 && (letraBarra.Repeticiones == "" || letraBarra.Repeticiones == null) && (ultimo_elemento_tipo3.Repeticiones == "" || ultimo_elemento_tipo3.Repeticiones == null) && (ultimo_elemento_tipo3.Subtipo == 0 || ultimo_elemento_tipo3.Subtipo == 100))
-                                {
-                                    ultimo_elemento_tipo3.Valor = ultimo_elemento_tipo3.Valor + CurrentMatch.Groups[1].Value[1];
-                                }
-                                else
-                                {
-                                    insertar((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1], letraBarra, CurrentMatch.Groups[3].Value);
-                                }
+                                target = result;
                             }
-                        }
-                        //Aun no ha llegado ninguna barra 
-                        else 
-                        {
                             try
                             {
                                 if (char.IsDigit(CurrentMatch.Groups[1].Value[1]))
                                 {
-                                    RegExItem group_reference = new RegExItem();
-                                    group_reference.Subtipo = 300;
-                                    group_reference.Tipo = 1;
-                                    group_reference.Valor = CurrentMatch.Groups[1].Value[1].ToString();
-                                    insertar(result, group_reference, CurrentMatch.Groups[3].Value);
+                                    RegExItem group_reference = new RegExItem(CurrentMatch.Groups[1].Value[1].ToString(), 1, 300, CurrentMatch.Groups[3].Value);
+
+                                    insertar(target, group_reference, CurrentMatch.Groups[3].Value);
                                 }
                                 else
                                 {
                                     RegExItem letraBarra = caracter(CurrentMatch.Value[1]);
                                     letraBarra.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
-                                    /*Todo lo que encuentre despues de una barra pierde su significado exepto los metacaracteres*/
-                                    if (letraBarra.Subtipo >= 100 && letraBarra.Subtipo <= 150 && ultimoEltodeArrayTipo.Tipo == 1 && (letraBarra.Repeticiones == "" || letraBarra.Repeticiones == null) && (ultimoEltodeArrayTipo.Repeticiones == "" || ultimoEltodeArrayTipo.Repeticiones == null) && ultimoEltodeArrayTipo.Subtipo == 0)
+                                    //ACCEDER AL COMPONENTE DEL COMPONENTE DE RESULT
+                                    RegExItem ultimo_elemento_tipo3 = new RegExItem();
+                                    if (ultimoEltodeArray.Tipo == 3)
                                     {
-                                        ultimoEltodeArrayTipo.Valor = ultimoEltodeArrayTipo.Valor + CurrentMatch.Groups[1].Value[1];
+                                        if (((RegExItem)ultimoEltodeArray.Componentes[ultimoEltodeArray.Componentes.Count - 1]).Componentes.Count != 0)
+                                        {
+                                            ultimo_elemento_tipo3 = ((RegExItem)((RegExItem)ultimoEltodeArray.Componentes[ultimoEltodeArray.Componentes.Count - 1]));
+                                            ultimo_elemento_tipo3 = (RegExItem)ultimo_elemento_tipo3.Componentes[ultimo_elemento_tipo3.Componentes.Count - 1];
+                                        }
+                                        else
+                                        {
+                                            ultimo_elemento_tipo3.Tipo = 0;
+                                        }
                                     }
                                     else
                                     {
-                                        insertar(result, letraBarra, CurrentMatch.Groups[3].Value);
+                                        ultimo_elemento_tipo3 = ultimoEltodeArray;
+                                    }
+
+                                    if (acumulable(letraBarra, ultimo_elemento_tipo3))
+                                    {
+                                        ultimo_elemento_tipo3.Valor = ultimo_elemento_tipo3.Valor + CurrentMatch.Groups[1].Value[1];
+                                    }
+                                    else
+                                    {
+                                        insertar(target, letraBarra, CurrentMatch.Groups[3].Value);
                                     }
                                 }
                             }
-                            catch (System.IndexOutOfRangeException e)
+                            catch (System.IndexOutOfRangeException)
                             {
-                                result.Componentes.Add(GenerarError(CurrentMatch.ToString()));
-                            }                           
-                        }
-                    }
-                    if (CurrentMatch.Groups[1].Value[0] == '[')
-                    {
-                        /*si antes habia una barra*/
-                        RegExItem ultimoEltodeArrayTipo = new RegExItem();
-                        if (result.Componentes.Count != 0)
-                        {
-                            ultimoEltodeArrayTipo = (RegExItem)result.Componentes[result.Componentes.Count - 1];
-                        }
-                        else
-                        {
-                            ultimoEltodeArrayTipo.Tipo = 0;
-                        }
-                        if (ultimoEltodeArrayTipo.Tipo == 3)
-                        {
+                                target.Componentes.Add(GenerarError(CurrentMatch.ToString())); ;
+                            }
+                            break;
+                        case '[':
                             RegExItem cor = corchetes(CurrentMatch.Groups[1].Value.Substring(1, CurrentMatch.Groups[1].Value.Length - 2));
-                            insertar((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1], cor, CurrentMatch.Groups[3].Value);
-                        }
-                        else
-                        {
-                            RegExItem cor = corchetes(CurrentMatch.Groups[1].Value.Substring(1, CurrentMatch.Groups[1].Value.Length - 2));
-                            insertar(result, cor, CurrentMatch.Groups[3].Value);
-                        }
-                    }
-                    if (CurrentMatch.Groups[1].Value[0] == '(')
-                    {
-                        /*si antes habia una barra*/
-                        RegExItem ultimoEltodeArrayTipo = new RegExItem();
-                        if (result.Componentes.Count != 0)
-                        {
-                            ultimoEltodeArrayTipo = (RegExItem)result.Componentes[result.Componentes.Count - 1];
-                        }
-                        else
-                        {
-                            ultimoEltodeArrayTipo.Tipo = 0;
-                        }
-                        if (ultimoEltodeArrayTipo.Tipo == 3)
-                        {
+                            if (ultimoEltodeArray.Tipo == 3)
+                            {
+                                insertar((RegExItem)ultimoEltodeArray.Componentes[ultimoEltodeArray.Componentes.Count - 1], cor, CurrentMatch.Groups[3].Value);
+                            }
+                            else
+                            {
+                                insertar(result, cor, CurrentMatch.Groups[3].Value);
+                            }
+                            break;
+                        case '(':
+                            bool anteriorTipo3 = (ultimoEltodeArray.Tipo == 3);
                             ArrayList pair = splitPar(input.Substring(CurrentMatch.Groups[1].Index, CurrentMatch.Groups[1].Length));
-                            bool repeticiones = pair.Count == 1;
+                            bool segundo = pair.Count == 1;
                             foreach (string variable in pair)
                             {
-                                /*si antes habia una barra*/
-                                if (result.Componentes.Count != 0)
+                                ultimoEltodeArray = Ultimo(result);
+                                if (variable[0] == '(' && variable[variable.Length - 1] == ')' && splitPar(variable).Count == 1)
                                 {
-                                    ultimoEltodeArrayTipo = (RegExItem)result.Componentes[result.Componentes.Count - 1];
-                                }
-                                else
-                                {
-                                    ultimoEltodeArrayTipo.Tipo = 0;
-                                }
-                                if (variable[0] == '(' && variable[variable.Length - 1] == ')'  && splitPar(variable).Count == 1)
-                                {
-                                    //AKI
-                                    //var eltosParentesisInter = analize(variable.Substring(1, (variable.Length - 2)), false);
-                                    //eltosParentesisInter.Tipo = 2;
                                     RegExItem eltosParentesisInter = busqueda_negativa(variable);
-                                    
-                                    if (repeticiones)
+                                    if (segundo)
                                     {
                                         eltosParentesisInter.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
                                     }
                                     //si antes habia una barra
-                                    if (ultimoEltodeArrayTipo.Tipo == 3)
+                                    if (ultimoEltodeArray.Tipo == 3)
                                     {
                                         if (eltosParentesisInter.Tipo == 3)
                                         {
@@ -456,95 +344,13 @@ namespace RegexAnalizer
                                             {
                                                 //añadir el primer elto de eltosParentesisInter al componente de anterior 
                                                 //añadir los otros eltos de eltosParentesisInter a anterior
-                                                ((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1]).Componentes.Add(componets);
+                                                ((RegExItem)ultimoEltodeArray.Componentes[ultimoEltodeArray.Componentes.Count - 1]).Componentes.Add(componets);
                                             }
-                                            ultimoEltodeArrayTipo.Componentes.Add(eltosParentesisInter.Componentes[eltosParentesisInter.Componentes.Count - 1]);
+                                            ultimoEltodeArray.Componentes.Add(eltosParentesisInter.Componentes[eltosParentesisInter.Componentes.Count - 1]);
                                         }
                                         else
                                         {
-                                            insertar((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1], eltosParentesisInter, eltosParentesisInter.Repeticiones);
-                                        }
-                                    }
-                                    else
-                                    {
-                                        result.Componentes.Add(eltosParentesisInter);
-                                    }
-                                }
-                                else
-                                {
-                                    var eltosParentesis = analize((string)variable + CurrentMatch.Groups[3].Value, false);
-                                    if (repeticiones)
-                                    {
-                                        eltosParentesis.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
-                                    }
-                                    foreach (RegExItem Otroscomponentes in eltosParentesis.Componentes)
-                                    {
-                                        if (ultimoEltodeArrayTipo.Tipo == 3)
-                                        {
-                                            if (Otroscomponentes.Tipo == 3)
-                                            {
-                                                foreach (RegExItem componets in ((RegExItem)Otroscomponentes.Componentes[0]).Componentes)
-                                                {
-                                                    ((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1]).Componentes.Add(componets);
-                                                }
-                                                ultimoEltodeArrayTipo.Componentes.Add(Otroscomponentes.Componentes[Otroscomponentes.Componentes.Count - 1]);
-                                            }
-                                            else
-                                            {
-                                                ((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1]).Componentes.Add(Otroscomponentes);
-                                            }
-                                        }
-                                        else 
-                                        {
-                                            result.Componentes.Add(Otroscomponentes);
-                                        }
-                                    }
-                                }
-                                repeticiones = true;
-                            }                            
-                        }
-                        //si no hay barra
-                        else
-                        {
-                            ArrayList pair = splitPar(input.Substring(CurrentMatch.Groups[1].Index, CurrentMatch.Groups[1].Length));
-                            bool segundo = pair.Count == 1;
-                            foreach (string variable in pair)
-                            {
-                                /*si antes habia una barra*/
-                                if (result.Componentes.Count != 0)
-                                {
-                                    ultimoEltodeArrayTipo = (RegExItem)result.Componentes[result.Componentes.Count - 1];
-                                }
-                                else
-                                {
-                                    ultimoEltodeArrayTipo.Tipo = 0;
-                                }
-                                if (variable[0] == '(' && variable[variable.Length - 1] == ')' && splitPar(variable).Count == 1)
-                                {
-                                    //AKI
-                                    //var eltosParentesisInter = analize(variable.Substring(1, (variable.Length - 2)), false);
-                                    //eltosParentesisInter.Tipo = 2;
-                                    RegExItem eltosParentesisInter = busqueda_negativa(variable);
-                                    
-                                    if (segundo)
-                                    {
-                                        eltosParentesisInter.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
-                                    }
-                                    /*si antes habia una barra*/
-                                    if (ultimoEltodeArrayTipo.Tipo == 3)
-                                    {
-                                        if (eltosParentesisInter.Tipo == 3)
-                                        {
-                                            foreach (RegExItem componets in ((RegExItem)eltosParentesisInter.Componentes[0]).Componentes)
-                                            {
-                      //añadir el primer elto de eltosParentesisInter al componente de anterior;añadir los otros eltos de eltosParentesisInter a anterior  
-                                                ((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1]).Componentes.Add(componets);
-                                            }
-                                            ultimoEltodeArrayTipo.Componentes.Add(eltosParentesisInter.Componentes[eltosParentesisInter.Componentes.Count - 1]);   
-                                        }
-                                        else 
-                                        {
-                                            insertar((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1], eltosParentesisInter, CurrentMatch.Groups[3].Value);
+                                            insertar((RegExItem)ultimoEltodeArray.Componentes[ultimoEltodeArray.Componentes.Count - 1], eltosParentesisInter, eltosParentesisInter.Repeticiones);
                                         }
                                     }
                                     else
@@ -555,85 +361,130 @@ namespace RegexAnalizer
                                 else
                                 {
                                     var eltosParentesis = analize((string)variable + (segundo ? CurrentMatch.Groups[3].Value : ""), false);
+
                                     if (segundo)
                                     {
                                         eltosParentesis.Repeticiones = Tratar_repeticiones(CurrentMatch.Groups[3].Value);
                                     }
                                     foreach (RegExItem Otroscomponentes in eltosParentesis.Componentes)
                                     {
-                                        if (ultimoEltodeArrayTipo.Tipo == 3)
+                                        if (ultimoEltodeArray.Tipo == 3)
                                         {
-                                            if (Otroscomponentes.Tipo != 3)
+                                            if (Otroscomponentes.Tipo == 3)
                                             {
-                                                ((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1]).Componentes.Add(Otroscomponentes);
+                                                foreach (RegExItem componets in ((RegExItem)Otroscomponentes.Componentes[0]).Componentes)
+                                                {
+                                                    ((RegExItem)ultimoEltodeArray.Componentes[ultimoEltodeArray.Componentes.Count - 1]).Componentes.Add(componets);
+                                                }
+
+                                                if (anteriorTipo3)
+                                                {
+                                                    ultimoEltodeArray.Componentes.Add(Otroscomponentes.Componentes[Otroscomponentes.Componentes.Count - 1]);
+                                                }
+                                                else
+                                                {
+                                                    for (int i = 1; i < Otroscomponentes.Componentes.Count; i++)
+                                                    {
+                                                        ultimoEltodeArray.Componentes.Add(Otroscomponentes.Componentes[i]);
+                                                    }
+                                                }
                                             }
                                             else
                                             {
-                                                foreach (RegExItem r in ((RegExItem)Otroscomponentes.Componentes[0]).Componentes)
-                                                {
-                                                    ((RegExItem)ultimoEltodeArrayTipo.Componentes[ultimoEltodeArrayTipo.Componentes.Count - 1]).Componentes.Add(r);
-                                                }
-                                                for (int i = 1; i < Otroscomponentes.Componentes.Count;i++ )
-                                                {
-                                                    ultimoEltodeArrayTipo.Componentes.Add(Otroscomponentes.Componentes[i]);
-                                                }                                                
+                                                ((RegExItem)ultimoEltodeArray.Componentes[ultimoEltodeArray.Componentes.Count - 1]).Componentes.Add(Otroscomponentes);
                                             }
                                         }
                                         else
                                         {
-    //ver si Otroscomponentes es tipo 3 insertar lo ke esta en result a la primera posicion de Otroscomponentes borrar result y luego copiar Otroscomponentes a result
-                                            if (Otroscomponentes.Tipo == 3)
+                                            if (!anteriorTipo3)
                                             {
-                                                if (result.Componentes.Count > 0)
+                                                //ver si Otroscomponentes es tipo 3 insertar lo quee esta en result a la primera posicion de Otroscomponentes borrar result y luego copiar Otroscomponentes a result
+                                                if (Otroscomponentes.Tipo == 3)
                                                 {
-                         //bucle para copiar todos los elementos de result hacia otrosComponentes colocandolos primeros que los que ya tenia otrosComponentes
-                                                    for(int i = result.Componentes.Count-1; i >= 0; i--)
+                                                    if (result.Componentes.Count > 0)
                                                     {
-                                                        ((RegExItem)Otroscomponentes.Componentes[0]).Componentes.Insert(0, result.Componentes[i]);
+                                                        //bucle para copiar todos los elementos de result hacia otrosComponentes colocandolos primeros que los que ya tenia otrosComponentes
+                                                        for (int i = result.Componentes.Count - 1; i >= 0; i--)
+                                                        {
+                                                            ((RegExItem)Otroscomponentes.Componentes[0]).Componentes.Insert(0, result.Componentes[i]);
+                                                        }
+                                                        result.Componentes.RemoveRange(0, result.Componentes.Count);
                                                     }
-                                                    result.Componentes.RemoveRange(0, result.Componentes.Count);     
                                                 }
                                             }
-                                            result.Componentes.Add(Otroscomponentes); 
+                                            result.Componentes.Add(Otroscomponentes);
                                         }
                                     }
                                 }
                                 segundo = true;
                             }
-                        }
-                    }
-
-                    if (CurrentMatch.Groups[1].Value[0] == '|')
-                    {
-                        //ya antes habia una barra
-                        RegExItem ultimoEltodeArrayTipo = new RegExItem();
-                        if (result.Componentes.Count != 0)
-                        {
-                            ultimoEltodeArrayTipo = (RegExItem)result.Componentes[result.Componentes.Count - 1];
-                        }
-                        else
-                        {
-                            ultimoEltodeArrayTipo.Tipo = 0;
-                        }
-                        if (ultimoEltodeArrayTipo.Tipo == 3)
-                        {
+                            break;
+                        case '|':
+                            if (ultimoEltodeArray.Tipo != 3)
+                            {
+                                //caso de primera barra |
+                                RegExItem barraVertical = new RegExItem();
+                                barraVertical.Tipo = 3;
+                                barraVertical.Componentes.Add((RegExItem)result.Clone());
+                                result.Componentes.RemoveRange(0, result.Componentes.Count);
+                                result.Componentes.Add(barraVertical);
+                                ultimoEltodeArray = barraVertical;
+                            }
                             RegExItem nuevoVacio1 = new RegExItem();
                             nuevoVacio1.Tipo = 0;
-                            ((RegExItem)ultimoEltodeArrayTipo).Componentes.Add(nuevoVacio1);
-                        }
-                        else 
-                        {
-                            //caso de primera barra |
-                            RegExItem barraVertical = new RegExItem();
-                            barraVertical.Tipo = 3;
-                            barraVertical.Componentes.Add((RegExItem)result.Clone());
-                            result.Componentes.RemoveRange(0, result.Componentes.Count);
-                            RegExItem nuevoVacio = new RegExItem();
-                            nuevoVacio.Tipo = 0;
-                            barraVertical.Componentes.Add(nuevoVacio);
-                            result.Componentes.Add(barraVertical);
-                        }
-                    }
+                            ((RegExItem)ultimoEltodeArray).Componentes.Add(nuevoVacio1);
+                            break;
+                        default:
+                            if (result.Componentes.Count == 0)
+                            {
+                                //result esta vacio
+                                insertar(result, GenerarSimple(CurrentMatch.Groups[1].Value), CurrentMatch.Groups[3].Value);
+                            }
+                            else
+                            {
+                                if (ultimoEltodeArray.Tipo == 3)
+                                {
+                                    if ((((RegExItem)ultimoEltodeArray.Componentes[ultimoEltodeArray.Componentes.Count - 1])).Componentes.Count == 0 && (((RegExItem)ultimoEltodeArray.Componentes[ultimoEltodeArray.Componentes.Count - 1])).Valor == null)
+                                    {
+                                        RegExItem actual = new RegExItem();
+                                        actual.Valor = CurrentMatch.Groups[1].Value;
+                                        actual.Tipo = 1;
+                                        insertar((RegExItem)ultimoEltodeArray.Componentes[ultimoEltodeArray.Componentes.Count - 1], actual, CurrentMatch.Groups[3].Value);
+                                    }
+                                    else
+                                    {
+                                        //Si es tipo 1 el ultimo elemento de ultimoEltoArray, si no tiene repeticiones y que el currentMatch tampoco tenga repeticiones
+                                        var eltoAnterior = ((RegExItem)((RegExItem)ultimoEltodeArray.Componentes[ultimoEltodeArray.Componentes.Count - 1]).Componentes[((RegExItem)ultimoEltodeArray.Componentes[ultimoEltodeArray.Componentes.Count - 1]).Componentes.Count - 1]);
+                                        if (eltoAnterior.Tipo == 1 && (eltoAnterior.Subtipo >= 100 && eltoAnterior.Subtipo <= 150 || eltoAnterior.Subtipo == 0) && CurrentMatch.Groups[3].Value == "" && eltoAnterior.Repeticiones == "")
+                                        {
+                                            string cadena = eltoAnterior.Valor;
+                                            eltoAnterior.Valor = cadena + CurrentMatch.ToString();
+                                        }
+                                        else
+                                        {
+                                            RegExItem actual = new RegExItem();
+                                            actual.Valor = CurrentMatch.Groups[1].Value;
+                                            actual.Tipo = 1;
+                                            insertar((RegExItem)ultimoEltodeArray.Componentes[ultimoEltodeArray.Componentes.Count - 1], actual, CurrentMatch.Groups[3].Value);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    if (ultimoEltodeArray.Tipo == 1 && CurrentMatch.Groups[3].Value == "" && ultimoEltodeArray.Repeticiones == "" && (ultimoEltodeArray.Subtipo >= 100 && ultimoEltodeArray.Subtipo <= 150 || ultimoEltodeArray.Subtipo == 0))
+                                    {
+                                        ultimoEltodeArray.Valor = ultimoEltodeArray.Valor + CurrentMatch.ToString();
+                                        ultimoEltodeArray.Subtipo = 0;
+                                    }
+                                    else
+                                    {
+                                        //result no esta vacio y es simple el elemento aun no hay barra
+                                        insertar(result, GenerarSimple(CurrentMatch.Groups[1].Value), CurrentMatch.Groups[3].Value);
+                                    }
+                                }
+                            }
+                            break;
+                    }                   
                 }      
             }
             //Error porque no termino de leer el input completo
@@ -655,10 +506,10 @@ namespace RegexAnalizer
                     result.Componentes.Add(GenerarError(input.Substring(prev + prevLength, input.Length - (prev + prevLength))));
                 }
             }
-
             return result;
         }
 
+        /*Separar la ER con parentesis en dos partes: el primer grupo y el resto*/
         private ArrayList splitPar(string token)
         {
             ArrayList result = new ArrayList();
@@ -680,23 +531,22 @@ namespace RegexAnalizer
             return result;
         }
 
+        //Reconocer los items del string que forma la ER
         private List<Match> getTokens(string exp)
         {
             List<Match> result = new List<Match>();
             Regex regex = new Regex("(\\\\.|\\[([^\\]])+]|\\]|\\(.+\\)|\\||\\.|[^\\.\\|\\(\\)\\[\\]\\{\\}\\?\\*\\+])(\\?|\\*|\\+|\\{\\d+(,\\d*)?})?");
             Match match = regex.Match(exp);
-
             while (match.Success)
             {
                 result.Add(match);
                 match = match.NextMatch();
             }
-
             return result;
         }
 
-        //metodo para mostrar los Match
-        public ArrayList m_r(string regexp, string ma)
+        /*Metodo para mostrar los Match*/
+        public ArrayList analize_macht(string regexp, string ma)
         {
             try
             {
@@ -724,11 +574,11 @@ namespace RegexAnalizer
             
         }
 
-        //Corchetes
+        //Metodo que analiza los Corchetes
         public RegExItem corchetes(String exp)
         {
             RegExItem result = new RegExItem();
-            result.Tipo = 4; /*el tipo es 4 como indica la clase RegExItem*/
+            result.Tipo = 4; /*Para este caso es tipo:4 como indica la clase RegExItem*/
             int j = 0;
             /*si el primer elemento del string es ^ entonces el subitpo es 1 y todo lo demas es negado 
             * en caso contrario el subtipo es 2 y el analisis es normal*/
@@ -745,7 +595,7 @@ namespace RegexAnalizer
                 switch (exp[j])
                 {
                     case '-':
-                        //que sea el primero que lo pilla normal al igual que sea el ultimo de la lista
+                        //que sea el primero que lo analiza normal al igual que sea el ultimo de la lista
                         if (result.Componentes.Count == 0)
                         {
                             result.Componentes.Add(GenerarSimple(exp[j].ToString()));
@@ -822,7 +672,7 @@ namespace RegexAnalizer
                             }
                         }
                     //Capturar la exepcion para cuando despues de \ dentro de los corchetes no encuentre nada example [1-\]
-                        catch (System.IndexOutOfRangeException e)
+                        catch (System.IndexOutOfRangeException)
                         {
                             result.Componentes.Add(GenerarError(exp[j].ToString()));
                             j++;
@@ -843,6 +693,7 @@ namespace RegexAnalizer
             return result;
         }
 
+        //Metodo que comprueba el orden dado el valor de dos RegexItem
         public bool OrdenValido(RegExItem anterior, RegExItem siguiente)
         {
             if (anterior.Subtipo == 0 && siguiente.Subtipo == 0)
@@ -890,7 +741,7 @@ namespace RegexAnalizer
             }
         }
 
-        //metodo para buscar despues de \ tambien retorna un RegExItem (con subtipo) ESTOS CASOS-->;";';\\ 
+        //metodo para buscar despues de \ tambien retorna un RegExItem (con subtipo)
         public RegExItem caracter(char c)
         {
             RegExItem letraBarra = new RegExItem();

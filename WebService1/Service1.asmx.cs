@@ -24,15 +24,15 @@ namespace WebService1
         public RegexAnalizer.Analizador analizador = new RegexAnalizer.Analizador();
 
         [WebMethod]
-        public RegexAnalizer.RegExItem send(string text)
+        public RegexAnalizer.RegExItem analizar(string text)
         {
             RegexAnalizer.RegExItem inputWeb = analizador.analize(text,true);
             return inputWeb;
         }
         [WebMethod]
-        public ArrayList check(string reg, string m)
+        public ArrayList analizar_match(string reg, string m)
         {
-            ArrayList match_web = analizador.m_r(reg, m);
+            ArrayList match_web = analizador.analize_macht(reg, m);
             return match_web;
         }
     }
