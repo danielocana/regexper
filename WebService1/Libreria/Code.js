@@ -458,10 +458,30 @@ function dibujarPath(response, lienzo)
         }
         if (response.Tipo == 3 || response.Tipo == 4)
         {
-            inicio_Barra(response,lienzo);
-            final_Barra(response,lienzo);
+            inicio_final_Barra(response, lienzo, true);
+            inicio_final_Barra(response, lienzo, false);
         }
     }
+}
+
+//Funcion que dibuja el inicio y el final del camino de la |
+function inicio_final_Barra(response, lienzo, flag) {
+    var primero = response.Componentes[0];
+    var ultimo = response.Componentes[response.Componentes.length - 1];
+    var tamano_mitad = (parseInt(primero.cy) + parseInt(primero.height / 2) + parseInt(centroLienzo));
+    var fin = (parseInt(ultimo.cy) + parseInt(ultimo.height / 2) + parseInt(centroLienzo));
+    for (var i = 0; i < response.Componentes.length; i++)
+    {
+        var actual = response.Componentes[i];
+        if (flag == true) {
+            lienzo.path('M' + actual.cx + ',' + (parseInt(actual.cy) + parseInt(actual.height / 2) + parseInt(centroLienzo)) + 'H' + response.cx).attr({ 'stroke-width': "2" });
+        }
+        else { lienzo.path('M' + (parseInt(actual.cx) + parseInt(actual.width)) + ',' + (parseInt(actual.cy) + parseInt(actual.height / 2) + parseInt(centroLienzo)) + 'H' + (parseInt(response.cx) + parseInt(response.width))).attr({ 'stroke-width': "2" }); }
+    }
+    if (flag == true) {
+        lienzo.path("M" + response.cx + "," + tamano_mitad + " V" + fin).attr({ 'stroke-width': "2" });
+    }
+    else { lienzo.path("M" + (parseInt(response.cx) + parseInt(response.width)) + "," + tamano_mitad + " V" + fin).attr({ 'stroke-width': "2" }); }
 }
 
 //Funcion que dibuja las repeticiones para aquellos que las tengan
@@ -582,35 +602,6 @@ function dibujar_Path_Repeticiones(response,lienzo)
             dibujar_Path_Repeticiones(actual, lienzo);
         }        
     }
-}
-
-//Funcion que dibuja el inicio del camino de la |
-function inicio_Barra(response, lienzo)
-{
-    var primero = response.Componentes[0];
-    var ultimo = response.Componentes[response.Componentes.length - 1];
-    var tamano_mitad = (parseInt(primero.cy) + parseInt(primero.height / 2) + parseInt(centroLienzo));
-    var fin = (parseInt(ultimo.cy) + parseInt(ultimo.height / 2) + parseInt(centroLienzo));
-    for (var i = 0; i < response.Componentes.length; i++) {
-        var actual = response.Componentes[i];
-        lienzo.path('M' + actual.cx + ',' + (parseInt(actual.cy) + parseInt(actual.height / 2) + parseInt(centroLienzo)) + 'H' + response.cx).attr({ 'stroke-width': "2" });
-    }
-    lienzo.path("M" + response.cx + "," + tamano_mitad + " V" + fin).attr({ 'stroke-width': "2" });
-}
-
-//Funcion que dibuja el final del camino de la |
-function final_Barra(response,lienzo)
-{
-    var primero = response.Componentes[0];
-    var ultimo = response.Componentes[response.Componentes.length - 1];
-    var tamano_mitad = (parseInt(primero.cy) + parseInt(primero.height / 2) + parseInt(centroLienzo));
-    var fin = (parseInt(ultimo.cy) + parseInt(ultimo.height / 2) + parseInt(centroLienzo));
-    for(var i = 0; i < response.Componentes.length; i++)
-    {
-        var actual = response.Componentes[i];
-        lienzo.path('M' + (parseInt(actual.cx) + parseInt(actual.width)) + ',' + (parseInt(actual.cy) + parseInt(actual.height / 2) + parseInt(centroLienzo)) + 'H' + (parseInt(response.cx) + parseInt(response.width))).attr({ 'stroke-width': "2" });
-    }
-    lienzo.path("M" + (parseInt(response.cx) + parseInt(response.width)) + "," + tamano_mitad + " V" + fin).attr({ 'stroke-width': "2" });
 }
 
 //Funcion que se llama en Visualizar
