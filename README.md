@@ -1,5 +1,6 @@
 regexper
 ========
 
-Final Work
-This program was developed in Visual Studio Pro 2013.
+The final work, Regular Expression Monitor (MWRegEx), is a tool based on web technologies, developed using Visual Studio environment. The main objective of this application is to support the teaching of regular expressions, in the field of education in string management of characters in the subjects of programming Computer Science. The application allows for the drawing of an automaton of a regular expression, facilitating the understanding; also allows apply the expression to different character strings showing the matches found and provides a version of the expression adapted to use in string literals and other languages such as Java. This tool has been implemented in two parts: a web service, written in C#, where all analyzes of regular expression and the strings are made to contrast; and a web client implemented using asp.net technology, JavaScript and Jquery, which manages the user interface and displays the results. This separated code allows the web service be reused with other client applications.
+The automaton that represents a regular expression is drawn using Raphael Javascript library that can handle SVG elements. Each element of the regular expressions has a different and unique drawing to that way differentiate each one.
+All graphic user interface is internationalized so that it can adapt to different languages and regions without needing engineering changes or code. Both the web service and the client side structure can add new features without generating a shock wave along the existing classes.
