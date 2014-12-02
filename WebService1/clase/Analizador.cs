@@ -159,8 +159,15 @@ namespace RegexAnalizer
                 else
                 {
                     //Para este caso el proceso es normal
-                    eltosParentesisInter = analize(variable.Substring(1, (variable.Length - 2)), false);
-                    eltosParentesisInter.Tipo = 2;
+                    if (variable[0] == '(') //1/12
+                    {
+                        eltosParentesisInter = analize(variable.Substring(1, (variable.Length - 2)), false);
+                        eltosParentesisInter.Tipo = 2;
+                    }
+                    else {
+                        eltosParentesisInter = analize(variable, false);
+                        eltosParentesisInter.Tipo = 0;                   
+                    }
                 }
             }
             return eltosParentesisInter;
@@ -385,6 +392,9 @@ namespace RegexAnalizer
 
                                                 if (anteriorTipo3)
                                                 {
+                                                    for (int r = 1; r < Otroscomponentes.Componentes.Count - 1; r++) { //1/12
+                                                        ultimoEltodeArray.Componentes.Add(Otroscomponentes.Componentes[r]);
+                                                    }
                                                     ultimoEltodeArray.Componentes.Add(Otroscomponentes.Componentes[Otroscomponentes.Componentes.Count - 1]);
                                                 }
                                                 else
@@ -528,6 +538,7 @@ namespace RegexAnalizer
                 pos++;
             }
             while (pos < token.Length && token[pos] != '(') pos++;
+            if (token[pos - 1] == '\\') pos--;
 
             result.Add(token.Substring(0, pos));
             if (pos != token.Length)
@@ -541,12 +552,24 @@ namespace RegexAnalizer
         private List<Match> getTokens(string exp)
         {
             List<Match> result = new List<Match>();
-            Regex regex = new Regex("(\\\\.|\\[([^\\]])+]|\\]|\\(.+\\)|\\||\\.|[^\\.\\|\\(\\)\\[\\]\\{\\}\\?\\*\\+])(\\?|\\*|\\+|\\{\\d+(,\\d*)?})?");
+//            Regex regex = new Regex("(\\\\.|\\[([^\\]])+]|\\]|\\(.+\\)|\\||\\.|[^\\.\\|\\(\\)\\[\\]\\{\\}\\?\\*\\+])(\\?|\\*|\\+|\\{\\d+(,\\d*)?})?");
+            Regex regex = new Regex("(\\\\.|\\[(\\\\]|[^\\]])+]|\\]|\\(.+\\)|\\||\\.|[^\\.\\|\\(\\)\\[\\]\\{\\}\\?\\*\\+])(\\?|\\*|\\+|\\{\\d+(,\\d*)?})?");
             Match match = regex.Match(exp);
             while (match.Success)
             {
-                result.Add(match);
-                match = match.NextMatch();
+                if (match.Value[0] != '(' || match.Index == 0) //1/12
+                {
+                    result.Add(match);
+                    match = match.NextMatch();
+                }
+                else {
+                    Regex regex2 = new Regex("(\\(.+)(\\?|\\*|\\+|\\{\\d+(,\\d*)?})?");
+                    Match match2 = regex2.Match(exp);
+                    if (match2.Success) {
+                        result.Add(match2);
+                        break;
+                    }
+                }
             }
             return result;
         }
@@ -689,7 +712,10 @@ namespace RegexAnalizer
                         {
                             result.Componentes.Add(caracter(exp[j + 1]));
                             j++;
-                        }                      
+                        }
+                        else {
+                            result.Componentes.Add(GenerarError(exp[j].ToString()));
+                        }                    
                         break;
                     default:
                         result.Componentes.Add(GenerarSimple(exp[j].ToString()));
