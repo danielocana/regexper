@@ -98,7 +98,7 @@ svg {
 #same {
     margin-left: 1%;
     margin-top: -1%;
-    position: absolute;
+    position: relative;
 }
 #Match {
     margin-top: 12px;
